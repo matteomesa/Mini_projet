@@ -17,6 +17,10 @@ typedef enum {
 	BACK_OUTPUT
 } BUFFER_NAME_t;
 
+float getPhaseMax(float* data,float* FFTresult);
+
+float phase(float rea, float im);
+
 
 void processAudioData(int16_t *data, uint16_t num_samples);
 

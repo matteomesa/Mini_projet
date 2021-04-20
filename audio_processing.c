@@ -61,6 +61,30 @@ void sound_remote(float* data){
 
 }
 
+float phase(float rea, float im)
+{
+	return 
+}
+
+float getPhaseMax(float* data,float* FFTresult)
+{
+	float max_norm = MIN_VALUE_THRESHOLD;
+	float phase_max = 0;
+	
+
+
+	for (uint16_t i=0; i < FFT_SIZE; i++)
+	{
+		if(data(i)>max_norm)
+		{
+			max_norm = data[i];
+			phase_max = phase(FFTresult[2*i],FFtresult[2*i+1]);
+		}
+	}
+	return phase_max;
+
+}
+
 /*
 *	Callback called when the demodulation of the four microphones is done.
 *	We get 160 samples per mic every 10ms (16kHz)
