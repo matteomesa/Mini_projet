@@ -69,7 +69,15 @@ float phase(float rea, float im)
 	}
 	else
 	{
-		return(atan(im/rea)+PI);
+		if(im >= 0)
+		{
+			return(atan(im/rea)+PI);
+		}
+		else
+		{
+			return(atan(im/rea)-PI);
+		}
+	
 	}
 }
 
@@ -77,17 +85,19 @@ float getPhaseMax(float* data,float* FFTresult)
 {
 	float max_norm = MIN_VALUE_THRESHOLD;
 	float phase_max = 0;
-	
+	uint16_t max_index = 0;
 
 
-	for (uint16_t i=0; i < FFT_SIZE; i++)
+	for (uint16_t i=0; i < FFT_SIZE/2; i++)
 	{
 		if(data[i]>max_norm)
 		{
 			max_norm = data[i];
 			phase_max = phase(FFTresult[2*i],FFTresult[2*i+1]);
+			max_index = i;
 		}
 	}
+	//chprintf((BaseSequentialStream *) &SDU1, " indice phase = %d \n ",max_index);
 	return phase_max;
 
 }
@@ -97,7 +107,7 @@ float getFreqMax(float*data)
 	float max_norm = MIN_VALUE_THRESHOLD;
 	uint16_t max_index = 0;
 
-	for (uint16_t i=0; i < FFT_SIZE; i++)
+	for (uint16_t i=0; i < FFT_SIZE/2; i++)
 	{
 		if(data[i]>max_norm)
 		{
@@ -105,7 +115,11 @@ float getFreqMax(float*data)
 			max_index = i;
 		}
 	}
-	return 150-abs(max_index)*150/512;
+	//chprintf((BaseSequentialStream *) &SDU1, " indice freq = %d \n ",max_index);
+
+	return max_index * 15.625;
+
+
 
 }
 
@@ -129,7 +143,7 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 	*/
 
 	static uint16_t nb_samples = 0;
-	static uint8_t mustSend = 0;
+	static uint16_t mustSend = 0;
 
 	//loop to fill the buffers
 	for(uint16_t i = 0 ; i < num_samples ; i+=4){
@@ -191,7 +205,7 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 
 			float freqMax = getFreqMax(micRight_output);
 	
-			chprintf((BaseSequentialStream *) &SDU1, " phase right = %f  phase left = %f \n dif de phase = %f frequence max = %f \n",phaseRight,phaseLeft,difPhase,freqMax);
+			chprintf((BaseSequentialStream *) &SDU1, " phase right = %f  phase left = %f \n dif de phase = %f frequence max = %f \n",phaseRight*180/PI,phaseLeft*180/PI,difPhase*180/PI,freqMax);
 
 			mustSend = 0;
 		}
