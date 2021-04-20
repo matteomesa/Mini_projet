@@ -189,7 +189,9 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 
 			float difPhase =  phaseRight - phaseLeft;
 
-			float freqMax = getFreqMax(micRight_output); 
+			float freqMax = getFreqMax(micRight_output);
+	
+			chprintf((BaseSequentialStream *) &SDU1, " phase right = %f  phase left = %f \n dif de phase = %f frequence max = %f \n",phaseRight,phaseLeft,difPhase,freqMax);
 
 			mustSend = 0;
 		}
