@@ -63,7 +63,6 @@ void sound_remote(float* data){
 
 float phase(float rea, float im)
 {
-	return;
 	if(rea >= 0)
 	{
 		return(atan(im/rea));
