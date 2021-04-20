@@ -63,7 +63,8 @@ void sound_remote(float* data){
 
 float phase(float rea, float im)
 {
-	return 
+	float tan = im/rea;
+	return(tan/(1+0.28125*tan*tan));
 }
 
 float getPhaseMax(float* data,float* FFTresult)
@@ -75,10 +76,10 @@ float getPhaseMax(float* data,float* FFTresult)
 
 	for (uint16_t i=0; i < FFT_SIZE; i++)
 	{
-		if(data(i)>max_norm)
+		if(data[i]>max_norm)
 		{
 			max_norm = data[i];
-			phase_max = phase(FFTresult[2*i],FFtresult[2*i+1]);
+			phase_max = phase(FFTresult[2*i],FFTresult[2*i+1]);
 		}
 	}
 	return phase_max;
