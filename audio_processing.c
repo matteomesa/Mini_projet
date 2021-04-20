@@ -85,6 +85,24 @@ float getPhaseMax(float* data,float* FFTresult)
 
 }
 
+float getFreqMax(float*data)
+{
+	float max_norm = MIN_VALUE_THRESHOLD;
+	uint16_t max_index = 0;
+
+	for (uint16_t i=0; i < FFT_SIZE; i++)
+	{
+		if(data(i)>max_norm)
+		{
+			max_norm = data[i];
+			max_index = i;
+		}
+	}
+	float freq = 0;
+	if (i < )
+
+}
+
 /*
 *	Callback called when the demodulation of the four microphones is done.
 *	We get 160 samples per mic every 10ms (16kHz)
@@ -158,7 +176,15 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		//sends to UART3
 		if(mustSend > 8){
 			//signals to send the result to the computer
-			chBSemSignal(&sendToComputer_sem);
+			//chBSemSignal(&sendToComputer_sem);
+
+			float phaseRight = getPhaseMax(micRight_output,micRight_cmplx_input);
+			float phaseLeft = getPhaseMax(micLeft_output,micLeft_cmplx_input);
+
+			float difPhase =  phaseRight - phaseLeft;
+
+			float freqMax = getFreqMax(micRight_output); 
+
 			mustSend = 0;
 		}
 		nb_samples = 0;
@@ -201,3 +227,4 @@ float* get_audio_buffer_ptr(BUFFER_NAME_t name){
 		return NULL;
 	}
 }
+
