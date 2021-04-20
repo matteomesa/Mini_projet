@@ -63,6 +63,7 @@ void sound_remote(float* data){
 
 float phase(float rea, float im)
 {
+	return;
 	if(rea >= 0)
 	{
 		return(atan(im/rea));
@@ -99,13 +100,13 @@ float getFreqMax(float*data)
 
 	for (uint16_t i=0; i < FFT_SIZE; i++)
 	{
-		if(data(i)>max_norm)
+		if(data[i]>max_norm)
 		{
 			max_norm = data[i];
 			max_index = i;
 		}
-	}	float freq = 0;
-	if (i < )
+	}
+	return 150-abs(max_index)*150/512;
 
 }
 
