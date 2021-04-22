@@ -107,9 +107,34 @@ float getFreqMax(float* data)
 
 	return max_index * 15.625;
 }
+
 float diff_phase(float new_diff_phase)
 {
 	return (ALPHA*new_diff_phase + (1-ALPHA)*old_phase_diff);
+}
+
+void move(float error)
+{
+	if(abs(error) < 5)
+	{
+		error = 0;
+	}
+
+	if( error < 5)
+	{
+		left_motor_set_speed(-600);
+		right_motor_set_speed(600);
+	}
+	else if(error > 5)
+	{
+		left_motor_set_speed(600);
+		right_motor_set_speed(-600);
+	}
+	else
+	{
+		left_motor_set_speed(0);
+		right_motor_set_speed(0);
+	}
 }
 /*
 *	Callback called when the demodulation of the four microphones is done.
@@ -182,7 +207,7 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 
 		//sends only one FFT result over 10 for 1 mic to not flood the computer
 		//sends to UART3
-		if(mustSend > 8){
+		if(mustSend > 40){
 			//signals to send the result to the computer
 			//chBSemSignal(&sendToComputer_sem);
 
@@ -190,10 +215,10 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 			float phaseLeft = getPhaseMax(micLeft_output,micLeft_cmplx_input);
 
 			float difPhase =  diff_phase(phaseRight - phaseLeft);
-
+			//move(difPhase);
 			float freqMax = getFreqMax(micRight_output);
 	
-			chprintf((BaseSequentialStream *) &SDU1, " phase right = %f  phase left = %f \n dif de phase = %f frequence max = %f \n",phaseRight*180/PI,phaseLeft*180/PI,difPhase*180/PI,freqMax);
+			chprintf((BaseSequentialStream *) &SDU1, "  dif de phase = %f \n",difPhase*180/PI*1400/freqMax);
 
 			mustSend = 0;
 		}
