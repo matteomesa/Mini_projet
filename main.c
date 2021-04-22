@@ -10,6 +10,7 @@
 #include <chprintf.h>
 #include <motors.h>
 #include <audio/microphone.h>
+#include <sensors/VL53L0X/VL53L0X.h>
 
 #include <audio_processing.h>
 #include <fft.h>
@@ -66,6 +67,11 @@ int main(void)
     timer12_start();
     //inits the motors
     motors_init();
+    
+
+    VL53L0X_start();
+    
+
 
     //send_tab is used to save the state of the buffer to send (double buffering)
     //to avoid modifications of the buffer while sending it
@@ -79,20 +85,29 @@ int main(void)
 
     /* Infinite loop. */
     while (1) {
+    	//uint16_t dist = VL53L0X_get_dist_mm();
+    	//chprintf((BaseSequentialStream *) &SDU1, " dist = %d \n ",dist);
+    	chThdSleepMilliseconds(5000);
+
 #ifdef SEND_FROM_MIC
         //waits until a result must be sent to the computer
-        wait_send_to_computer();
+        //wait_send_to_computer();
 #ifdef DOUBLE_BUFFERING
         //we copy the buffer to avoid conflicts
-        arm_copy_f32(get_audio_buffer_ptr(LEFT_OUTPUT), send_tab, FFT_SIZE);
-        SendFloatToComputer((BaseSequentialStream *) &SD3, send_tab, FFT_SIZE);
+        //arm_copy_f32(get_audio_buffer_ptr(LEFT_OUTPUT), send_tab, FFT_SIZE);
+        //SendFloatToComputer((BaseSequentialStream *) &SD3, send_tab, FFT_SIZE);
 #else
-        SendFloatToComputer((BaseSequentialStream *) &SD3, get_audio_buffer_ptr(LEFT_OUTPUT), FFT_SIZE);
+        //SendFloatToComputer((BaseSequentialStream *) &SD3, get_audio_buffer_ptr(LEFT_OUTPUT), FFT_SIZE);
 #endif  /* DOUBLE_BUFFERING */
 #else
 
 #endif  /* SEND_FROM_MIC */
+    
+
+
+
     }
+    
 }
 
 #define STACK_CHK_GUARD 0xe2dee396
