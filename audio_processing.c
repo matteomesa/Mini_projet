@@ -24,6 +24,8 @@ static float micLeft_output[FFT_SIZE];
 static float micRight_output[FFT_SIZE];
 static float micFront_output[FFT_SIZE];
 static float micBack_output[FFT_SIZE];
+//Static float old diff phase 
+static float old_phase_diff;
 
 #define MIN_VALUE_THRESHOLD	10000 
 
@@ -33,6 +35,7 @@ static float micBack_output[FFT_SIZE];
 #define FREQ_RIGHT		23	//359HZ
 #define FREQ_BACKWARD	26	//406Hz
 #define MAX_FREQ		30	//we don't analyze after this index to not use resources for nothing
+#define ALPHA			0.7 // coefficient to filter diff phase
 
 #define FREQ_FORWARD_L		(FREQ_FORWARD-1)
 #define FREQ_FORWARD_H		(FREQ_FORWARD+1)
@@ -82,9 +85,8 @@ float getPhaseMax(float* data,float* FFTresult)
 		}
 	}
 
-	phase_max = phase(FFTresult[2*max_index],FFTresult[2*max_index+1]);
 	//chprintf((BaseSequentialStream *) &SDU1, " indice phase = %d \n ",max_index);
-	return phase_max;
+	return phase(FFTresult[2*max_index],FFTresult[2*max_index+1]);
 
 }
 
@@ -104,11 +106,11 @@ float getFreqMax(float* data)
 	//chprintf((BaseSequentialStream *) &SDU1, " indice freq = %d \n ",max_index);
 
 	return max_index * 15.625;
-
-
-
 }
-
+float diff_phase(float new_diff_phase)
+{
+	return (ALPHA*new_diff_phase + (1-ALPHA)*old_phase_diff);
+}
 /*
 *	Callback called when the demodulation of the four microphones is done.
 *	We get 160 samples per mic every 10ms (16kHz)
@@ -187,7 +189,7 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 			float phaseRight = getPhaseMax(micRight_output,micRight_cmplx_input);
 			float phaseLeft = getPhaseMax(micLeft_output,micLeft_cmplx_input);
 
-			float difPhase =  phaseRight - phaseLeft;
+			float difPhase =  diff_phase(phaseRight - phaseLeft);
 
 			float freqMax = getFreqMax(micRight_output);
 	
