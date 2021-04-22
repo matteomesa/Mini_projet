@@ -63,22 +63,7 @@ void sound_remote(float* data){
 
 float phase(float rea, float im)
 {
-	if(rea >= 0)
-	{
-		return(atan(im/rea));
-	}
-	else
-	{
-		if(im >= 0)
-		{
-			return(atan(im/rea)+PI);
-		}
-		else
-		{
-			return(atan(im/rea)-PI);
-		}
-	
-	}
+	return atan2(im,rea);
 }
 
 float getPhaseMax(float* data,float* FFTresult)
@@ -93,16 +78,17 @@ float getPhaseMax(float* data,float* FFTresult)
 		if(data[i]>max_norm)
 		{
 			max_norm = data[i];
-			phase_max = phase(FFTresult[2*i],FFTresult[2*i+1]);
 			max_index = i;
 		}
 	}
+
+	phase_max = phase(FFTresult[2*max_index],FFTresult[2*max_index+1]);
 	//chprintf((BaseSequentialStream *) &SDU1, " indice phase = %d \n ",max_index);
 	return phase_max;
 
 }
 
-float getFreqMax(float*data)
+float getFreqMax(float* data)
 {
 	float max_norm = MIN_VALUE_THRESHOLD;
 	uint16_t max_index = 0;
