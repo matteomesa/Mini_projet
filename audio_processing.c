@@ -26,6 +26,7 @@ static float micFront_output[FFT_SIZE];
 static float micBack_output[FFT_SIZE];
 //Static float old diff phase 
 static float old_phase_diff;
+static uint8_t nbFail;
 
 #define MIN_VALUE_THRESHOLD	10000 
 
@@ -67,6 +68,13 @@ void sound_remote(float* data){
 float phase(float rea, float im)
 {
 	return atan2(im,rea);
+}
+
+float getPhase(float* FFTresult, float freq)
+{
+	uint16_t index = ceil(freq/15.625);
+	return phase(FFTresult[2*index],FFTresult[2*index+1]);
+	
 }
 
 float getPhaseMax(float* data,float* FFTresult)
@@ -113,20 +121,46 @@ float diff_phase(float new_diff_phase)
 	return (ALPHA*new_diff_phase + (1-ALPHA)*old_phase_diff);
 }
 
-void move(float error)
+void move(float error,float freq)
 {
-	if(abs(error) < 5)
+	//if(nbFail >10)
+	//{
+	//	left_motor_set_speed(0);
+	//	right_motor_set_speed(0);
+	//}
+
+
+	if ((freq > 500)||(freq<300)||(abs(error) > 60))
 	{
-		error = 0;
+		//if(nbFail >10)
+		//{
+			//left_motor_set_speed(0);
+			//right_motor_set_speed(0);
+			return;
+		//}
+		//else
+		//{
+		//	nbFail ++;
+		//	return;
+		//}
 	}
 
-	if( error < 5)
+	if(abs(error) <= 10)
 	{
+		nbFail = 0;
+		left_motor_set_speed(-error*20);
+		right_motor_set_speed(error*20);
+	}
+
+	if( error < -10)
+	{
+		nbFail = 0;
 		left_motor_set_speed(-600);
 		right_motor_set_speed(600);
 	}
-	else if(error > 5)
+	else if(error > 10)
 	{
+		nbFail = 0;
 		left_motor_set_speed(600);
 		right_motor_set_speed(-600);
 	}
@@ -205,20 +239,42 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		arm_cmplx_mag_f32(micFront_cmplx_input, micFront_output, FFT_SIZE);
 		arm_cmplx_mag_f32(micBack_cmplx_input, micBack_output, FFT_SIZE);
 
+
+
+		float phaseRight = getPhaseMax(micRight_output,micRight_cmplx_input);
+		float phaseLeft = getPhaseMax(micLeft_output,micLeft_cmplx_input);
+
+		float difPhase =  diff_phase(phaseRight - phaseLeft);
+		float freqMax = getFreqMax(micRight_output);
+
+		move(difPhase*180/PI,freqMax);
+
+		//uint16_t index400 = ceil(400/15.625);
+		//float amplitude400 = micRight_output[index400];
+
+		//float phaseRight400 = getPhase(micRight_cmplx_input,400);
+		//float phaseLeft400 = getPhase(micLeft_cmplx_input,400);
+
+		//float difPhase400 =  diff_phase(phaseRight400 - phaseLeft400);
+
+		//move(difPhase400*180/PI,400,amplitude400);
+
 		//sends only one FFT result over 10 for 1 mic to not flood the computer
 		//sends to UART3
-		if(mustSend > 40){
+		if(mustSend > 8){
 			//signals to send the result to the computer
 			//chBSemSignal(&sendToComputer_sem);
 
-			float phaseRight = getPhaseMax(micRight_output,micRight_cmplx_input);
-			float phaseLeft = getPhaseMax(micLeft_output,micLeft_cmplx_input);
+			uint16_t index400 = ceil(400/15.625);
+			float amplitude400 = micRight_output[index400];
 
-			float difPhase =  diff_phase(phaseRight - phaseLeft);
-			//move(difPhase);
-			float freqMax = getFreqMax(micRight_output);
+			//chprintf((BaseSequentialStream *) &SDU1, "  amplitude 400 = %f \n",amplitude400);
+
+			//chprintf((BaseSequentialStream *) &SDU1,"nbFail = %f \n",nbFail);
+			
 	
-			chprintf((BaseSequentialStream *) &SDU1, "  dif de phase = %f \n",difPhase*180/PI*1400/freqMax);
+			chprintf((BaseSequentialStream *) &SDU1, "  dif de phase = %f, freq max = %f \n",difPhase*180/PI,freqMax);
+
 
 			mustSend = 0;
 		}
