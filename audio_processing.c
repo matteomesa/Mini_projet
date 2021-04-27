@@ -17,53 +17,27 @@ static BSEMAPHORE_DECL(sendToComputer_sem, TRUE);
 //2 times FFT_SIZE because these arrays contain complex numbers (real + imaginary)
 static float micLeft_cmplx_input[2 * FFT_SIZE];
 static float micRight_cmplx_input[2 * FFT_SIZE];
-static float micFront_cmplx_input[2 * FFT_SIZE];
-static float micBack_cmplx_input[2 * FFT_SIZE];
+
 //Arrays containing the computed magnitude of the complex numbers
 static float micLeft_output[FFT_SIZE];
 static float micRight_output[FFT_SIZE];
 static float micFront_output[FFT_SIZE];
 static float micBack_output[FFT_SIZE];
-//Static float old diff phase 
+
+//Static float 
 static float old_phase_diff;
 static uint8_t nbFail;
 
 #define MIN_VALUE_THRESHOLD	10000 
 
 #define MIN_FREQ		10	//we don't analyze before this index to not use resources for nothing
-#define FREQ_FORWARD	16	//250Hz
-#define FREQ_LEFT		19	//296Hz
-#define FREQ_RIGHT		23	//359HZ
-#define FREQ_BACKWARD	26	//406Hz
 #define MAX_FREQ		30	//we don't analyze after this index to not use resources for nothing
 #define ALPHA			0.7 // coefficient to filter diff phase
-
-#define FREQ_FORWARD_L		(FREQ_FORWARD-1)
-#define FREQ_FORWARD_H		(FREQ_FORWARD+1)
-#define FREQ_LEFT_L			(FREQ_LEFT-1)
-#define FREQ_LEFT_H			(FREQ_LEFT+1)
-#define FREQ_RIGHT_L		(FREQ_RIGHT-1)
-#define FREQ_RIGHT_H		(FREQ_RIGHT+1)
-#define FREQ_BACKWARD_L		(FREQ_BACKWARD-1)
-#define FREQ_BACKWARD_H		(FREQ_BACKWARD+1)
 
 /*
 *	Simple function used to detect the highest value in a buffer
 *	and to execute a motor command depending on it
 */
-void sound_remote(float* data){
-	float max_norm = MIN_VALUE_THRESHOLD;
-	int16_t max_norm_index = -1; 
-
-	//search for the highest peak
-	for(uint16_t i = MIN_FREQ ; i <= MAX_FREQ ; i++){
-		if(data[i] > max_norm){
-			max_norm = data[i];
-			max_norm_index = i;
-		}
-	}
-
-}
 
 float phase(float rea, float im)
 {
@@ -269,15 +243,11 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		//construct an array of complex numbers. Put 0 to the imaginary part
 		micRight_cmplx_input[nb_samples] = (float)data[i + MIC_RIGHT];
 		micLeft_cmplx_input[nb_samples] = (float)data[i + MIC_LEFT];
-		micBack_cmplx_input[nb_samples] = (float)data[i + MIC_BACK];
-		micFront_cmplx_input[nb_samples] = (float)data[i + MIC_FRONT];
 
 		nb_samples++;
 
 		micRight_cmplx_input[nb_samples] = 0;
 		micLeft_cmplx_input[nb_samples] = 0;
-		micBack_cmplx_input[nb_samples] = 0;
-		micFront_cmplx_input[nb_samples] = 0;
 
 		nb_samples++;
 
@@ -296,8 +266,6 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 
 		doFFT_optimized(FFT_SIZE, micRight_cmplx_input);
 		doFFT_optimized(FFT_SIZE, micLeft_cmplx_input);
-		doFFT_optimized(FFT_SIZE, micFront_cmplx_input);
-		doFFT_optimized(FFT_SIZE, micBack_cmplx_input);
 
 		/*	Magnitude processing
 		*
@@ -308,9 +276,6 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		*/
 		arm_cmplx_mag_f32(micRight_cmplx_input, micRight_output, FFT_SIZE);
 		arm_cmplx_mag_f32(micLeft_cmplx_input, micLeft_output, FFT_SIZE);
-		arm_cmplx_mag_f32(micFront_cmplx_input, micFront_output, FFT_SIZE);
-		arm_cmplx_mag_f32(micBack_cmplx_input, micBack_output, FFT_SIZE);
-
 
 
 		float phaseRight = getPhaseMax(micRight_output,micRight_cmplx_input);
@@ -353,8 +318,6 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		}
 		nb_samples = 0;
 		mustSend++;
-
-		sound_remote(micLeft_output);
 	}
 }
 
@@ -369,23 +332,11 @@ float* get_audio_buffer_ptr(BUFFER_NAME_t name){
 	else if (name == RIGHT_CMPLX_INPUT){
 		return micRight_cmplx_input;
 	}
-	else if (name == FRONT_CMPLX_INPUT){
-		return micFront_cmplx_input;
-	}
-	else if (name == BACK_CMPLX_INPUT){
-		return micBack_cmplx_input;
-	}
 	else if (name == LEFT_OUTPUT){
 		return micLeft_output;
 	}
 	else if (name == RIGHT_OUTPUT){
 		return micRight_output;
-	}
-	else if (name == FRONT_OUTPUT){
-		return micFront_output;
-	}
-	else if (name == BACK_OUTPUT){
-		return micBack_output;
 	}
 	else{
 		return NULL;
