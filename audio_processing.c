@@ -170,6 +170,78 @@ void move(float error,float freq)
 		right_motor_set_speed(0);
 	}
 }
+
+void movefreq(float* FFT_left, float* FFT_right,float freq,float* ampl)
+{
+	
+	uint16_t index = ceil(freq/15.625);
+	uint16_t maxindex = index;
+	float maxampl = ampl[index];
+
+	if (index < FFT_SIZE-1){
+		if (ampl[index]<ampl[index+1]){
+			maxampl = ampl[index+1];
+			maxindex = index+1;
+		}
+	}
+	if(index>0){
+		if(ampl[index]<ampl[index-1]){
+			maxampl = ampl[index-1];
+			maxindex = index-1; 
+		}
+	}
+
+	float phaseRight400 = getPhase(micRight_cmplx_input,maxindex);
+	float phaseLeft400 = getPhase(micLeft_cmplx_input,maxindex);
+
+	float error = diff_phase(phaseRight400 - phaseLeft400)*180/PI,freqMax;
+
+
+	if(maxampl<4000)
+	{
+		left_motor_set_speed(0);
+		right_motor_set_speed(0);
+	}
+
+
+
+	if(abs(error)*20 <= 200)
+	{
+		nbFail = 0;
+		left_motor_set_speed(-error*20);
+		right_motor_set_speed(error*20);
+	}
+
+	if( error < -10)
+	{
+		nbFail = 0;
+		left_motor_set_speed(-600);
+		right_motor_set_speed(600);
+	}
+	else if(error > 10)
+	{
+		nbFail = 0;
+		left_motor_set_speed(600);
+		right_motor_set_speed(-600);
+	}
+	else
+	{
+		left_motor_set_speed(0);
+		right_motor_set_speed(0);
+	}
+}
+
+void mess_ampl400(float ampl)
+{
+	if (ampl > 4000)
+	{
+		chprintf((BaseSequentialStream *) &SDU1, " -- ROTATION ON --");
+	}
+	else
+	{
+		chprintf((BaseSequentialStream *) &SDU1, " -- ROTATION OFF --");
+	}
+}
 /*
 *	Callback called when the demodulation of the four microphones is done.
 *	We get 160 samples per mic every 10ms (16kHz)
@@ -249,13 +321,16 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 
 		move(difPhase*180/PI,freqMax);
 
-		//uint16_t index400 = ceil(400/15.625);
-		//float amplitude400 = micRight_output[index400];
+		uint16_t index400 = ceil(400/15.625);
+		float amplitude400 = micRight_output[index400];
 
-		//float phaseRight400 = getPhase(micRight_cmplx_input,400);
-		//float phaseLeft400 = getPhase(micLeft_cmplx_input,400);
+		float phaseRight400 = getPhase(micRight_cmplx_input,400);
+		float phaseLeft400 = getPhase(micLeft_cmplx_input,400);
 
-		//float difPhase400 =  diff_phase(phaseRight400 - phaseLeft400);
+		float difPhase400 =  diff_phase(phaseRight400 - phaseLeft400);
+
+		chprintf((BaseSequentialStream *) &SDU1, "\n diff phase 400 = %1.4f, amplitude 400 = %1.4f ",difPhase400*180/PI,amplitude400);
+		mess_ampl400(amplitude400);
 
 		//move(difPhase400*180/PI,400,amplitude400);
 
@@ -265,15 +340,13 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 			//signals to send the result to the computer
 			//chBSemSignal(&sendToComputer_sem);
 
-			uint16_t index400 = ceil(400/15.625);
-			float amplitude400 = micRight_output[index400];
 
 			//chprintf((BaseSequentialStream *) &SDU1, "  amplitude 400 = %f \n",amplitude400);
 
 			//chprintf((BaseSequentialStream *) &SDU1,"nbFail = %f \n",nbFail);
 			
 	
-			chprintf((BaseSequentialStream *) &SDU1, "  dif de phase = %f, freq max = %f \n",difPhase*180/PI,freqMax);
+			//chprintf((BaseSequentialStream *) &SDU1, "  dif de phase = %f, freq max = %f \n",difPhase*180/PI,freqMax);
 
 
 			mustSend = 0;
