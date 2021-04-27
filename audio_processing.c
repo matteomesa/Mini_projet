@@ -28,7 +28,7 @@ static float micBack_output[FFT_SIZE];
 static float old_phase_diff;
 static uint8_t nbFail;
 
-#define MIN_VALUE_THRESHOLD	10000 
+#define MIN_VALUE_THRESHOLD	100
 
 #define MIN_FREQ		10	//we don't analyze before this index to not use resources for nothing
 #define MAX_FREQ		30	//we don't analyze after this index to not use resources for nothing
@@ -90,6 +90,22 @@ float getFreqMax(float* data)
 	return max_index * 15.625;
 }
 
+float getAmplMax(float* data)
+{
+	float max_norm = MIN_VALUE_THRESHOLD;
+	uint16_t max_index = 0;
+
+	for (uint16_t i=0; i < FFT_SIZE/2; i++)
+	{
+		if(data[i]>max_norm)
+		{
+			max_norm = data[i];
+			max_index = i;
+		}
+	}
+	return data[max_index];
+}
+
 float diff_phase(float new_diff_phase)
 {
 	return (ALPHA*new_diff_phase + (1-ALPHA)*old_phase_diff);
@@ -97,26 +113,28 @@ float diff_phase(float new_diff_phase)
 
 void move(float error,float freq)
 {
-	//if(nbFail >10)
-	//{
-	//	left_motor_set_speed(0);
-	//	right_motor_set_speed(0);
-	//}
+	float maxAmplitude = getAmplMax(micRight_output);
+		chprintf((BaseSequentialStream *) &SDU1,"NbFail = %d, difPhase = %1.4f, freq = %1.4f, amplitude = %1.4f \n",nbFail,error,freq,maxAmplitude);
 
 
-	if ((freq > 500)||(freq<300)||(abs(error) > 60))
+
+
+	if ((freq > 450)||(freq<350)||(abs(error) > 60))
 	{
-		//if(nbFail >10)
-		//{
-			//left_motor_set_speed(0);
-			//right_motor_set_speed(0);
+		
+		if(nbFail >4)
+		{
+			left_motor_set_speed(0);
+			right_motor_set_speed(0);
+			chprintf((BaseSequentialStream *) &SDU1,"DONT MOVE \n");
 			return;
-		//}
-		//else
-		//{
-		//	nbFail ++;
-		//	return;
-		//}
+		}
+		else
+		{
+			nbFail ++;
+			chprintf((BaseSequentialStream *) &SDU1,"NBFAIL ++ \n");
+			return;
+		}
 	}
 
 	if(abs(error) <= 10)
@@ -124,6 +142,7 @@ void move(float error,float freq)
 		nbFail = 0;
 		left_motor_set_speed(-error*20);
 		right_motor_set_speed(error*20);
+		chprintf((BaseSequentialStream *) &SDU1,"MOVE CLOSE \n");
 	}
 
 	if( error < -10)
@@ -131,12 +150,14 @@ void move(float error,float freq)
 		nbFail = 0;
 		left_motor_set_speed(-600);
 		right_motor_set_speed(600);
+		chprintf((BaseSequentialStream *) &SDU1,"MOVE LEFT\n");
 	}
 	else if(error > 10)
 	{
 		nbFail = 0;
 		left_motor_set_speed(600);
 		right_motor_set_speed(-600);
+		chprintf((BaseSequentialStream *) &SDU1,"MOVE RIGHT\n");
 	}
 	else
 	{
@@ -145,7 +166,7 @@ void move(float error,float freq)
 	}
 }
 
-void movefreq(float* FFT_left, float* FFT_right,float freq,float* ampl)
+void moveFreq(float* FFT_left, float* FFT_right,float freq,float* ampl)
 {
 	
 	uint16_t index = ceil(freq/15.625);
@@ -168,8 +189,11 @@ void movefreq(float* FFT_left, float* FFT_right,float freq,float* ampl)
 	float phaseRight400 = getPhase(micRight_cmplx_input,maxindex);
 	float phaseLeft400 = getPhase(micLeft_cmplx_input,maxindex);
 
-	float error = diff_phase(phaseRight400 - phaseLeft400)*180/PI,freqMax;
+	float error = diff_phase(phaseRight400 - phaseLeft400)*180/PI;
 
+
+
+	chprintf((BaseSequentialStream *) &SDU1," difPhase = %1.4f, freq = %1.4f, amplitude = %1.4f \n",error,freq,maxampl);
 
 	if(maxampl<4000)
 	{
@@ -284,7 +308,7 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		float difPhase =  diff_phase(phaseRight - phaseLeft);
 		float freqMax = getFreqMax(micRight_output);
 
-		move(difPhase*180/PI,freqMax);
+		//move(difPhase*180/PI,freqMax);
 
 		uint16_t index400 = ceil(400/15.625);
 		float amplitude400 = micRight_output[index400];
@@ -294,10 +318,12 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 
 		float difPhase400 =  diff_phase(phaseRight400 - phaseLeft400);
 
-		chprintf((BaseSequentialStream *) &SDU1, "\n diff phase 400 = %1.4f, amplitude 400 = %1.4f ",difPhase400*180/PI,amplitude400);
-		mess_ampl400(amplitude400);
+		//chprintf((BaseSequentialStream *) &SDU1, "\n diff phase 400 = %1.4f, amplitude 400 = %1.4f ",difPhase400*180/PI,amplitude400);
+		//mess_ampl400(amplitude400);
 
 		//move(difPhase400*180/PI,400,amplitude400);
+
+		moveFreq(micLeft_cmplx_input,micRight_cmplx_input,400,micRight_output);
 
 		//sends only one FFT result over 10 for 1 mic to not flood the computer
 		//sends to UART3
