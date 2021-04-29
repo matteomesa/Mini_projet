@@ -2,7 +2,7 @@
 #define AUDIO_PROCESSING_H
 
 
-#define FFT_SIZE 	1024
+#define FFT_SIZE 1024
 
 typedef enum {
 	//2 times FFT_SIZE because these arrays contain complex numbers (real + imaginary)

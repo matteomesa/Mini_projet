@@ -28,10 +28,9 @@ static float micBack_output[FFT_SIZE];
 static float old_phase_diff;
 static uint8_t nbFail;
 
-#define MIN_VALUE_THRESHOLD	100
 
-#define MIN_FREQ		10	//we don't analyze before this index to not use resources for nothing
-#define MAX_FREQ		30	//we don't analyze after this index to not use resources for nothing
+#define MIN_FREQ		20	//we don't analyze before this index to not use resources for nothing
+#define MAX_FREQ		60	//we don't analyze after this index to not use resources for nothing
 #define ALPHA			0.7 // coefficient to filter diff phase
 
 /*
@@ -53,12 +52,12 @@ float getPhase(float* FFTresult, float freq)
 
 float getPhaseMax(float* data,float* FFTresult)
 {
-	float max_norm = MIN_VALUE_THRESHOLD;
+	float max_norm = 0;
 	float phase_max = 0;
 	uint16_t max_index = 0;
 
 
-	for (uint16_t i=0; i < FFT_SIZE/2; i++)
+	for (uint16_t i=MIN_FREQ; i < MAX_FREQ; i++)
 	{
 		if(data[i]>max_norm)
 		{
@@ -74,10 +73,10 @@ float getPhaseMax(float* data,float* FFTresult)
 
 float getFreqMax(float* data)
 {
-	float max_norm = MIN_VALUE_THRESHOLD;
+	float max_norm = 0;
 	uint16_t max_index = 0;
 
-	for (uint16_t i=0; i < FFT_SIZE/2; i++)
+	for (uint16_t i=MIN_FREQ; i < MAX_FREQ; i++)
 	{
 		if(data[i]>max_norm)
 		{
@@ -92,10 +91,10 @@ float getFreqMax(float* data)
 
 float getAmplMax(float* data)
 {
-	float max_norm = MIN_VALUE_THRESHOLD;
+	float max_norm = 0;
 	uint16_t max_index = 0;
 
-	for (uint16_t i=0; i < FFT_SIZE/2; i++)
+	for (uint16_t i=MIN_FREQ; i < MAX_FREQ; i++)
 	{
 		if(data[i]>max_norm)
 		{
@@ -108,20 +107,21 @@ float getAmplMax(float* data)
 
 float diff_phase(float new_diff_phase)
 {
-	temp_phase = (ALPHA*new_diff_phase + (1-ALPHA)*old_phase_diff);
-	old_phase_diff = temp_phase;
+	float temp_phase = (ALPHA*new_diff_phase + (1-ALPHA)*old_phase_diff);
+	//old_phase_diff = temp_phase;
 	return temp_phase;
 }
 
 void move(float error,float freq)
 {
 	float maxAmplitude = getAmplMax(micRight_output);
-		chprintf((BaseSequentialStream *) &SDU1,"NbFail = %d, difPhase = %1.4f, freq = %1.4f, amplitude = %1.4f \n",nbFail,error,freq,maxAmplitude);
+	chprintf((BaseSequentialStream *) &SDU1,"NbFail = %d, difPhase = %1.4f, freq = %1.4f, amplitude = %1.4f \n",nbFail,error,freq,maxAmplitude);
 
 
 
 
-	if ((freq > 450)||(freq<350)||(abs(error) > 60))
+	//if ((freq > 2500)||(freq<850)||(abs(error) > 100))
+	if (maxAmplitude < 8000)
 	{
 		
 		if(nbFail >4)
@@ -142,23 +142,23 @@ void move(float error,float freq)
 	if(abs(error) <= 10)
 	{
 		nbFail = 0;
-		left_motor_set_speed(-error*20);
-		right_motor_set_speed(error*20);
+		//left_motor_set_speed(-error*20);
+		//right_motor_set_speed(error*20);
 		chprintf((BaseSequentialStream *) &SDU1,"MOVE CLOSE \n");
 	}
 
 	if( error < -10)
 	{
 		nbFail = 0;
-		left_motor_set_speed(-600);
-		right_motor_set_speed(600);
+		//left_motor_set_speed(-600);
+		//right_motor_set_speed(600);
 		chprintf((BaseSequentialStream *) &SDU1,"MOVE LEFT\n");
 	}
 	else if(error > 10)
 	{
 		nbFail = 0;
-		left_motor_set_speed(600);
-		right_motor_set_speed(-600);
+		//left_motor_set_speed(600);
+		//right_motor_set_speed(-600);
 		chprintf((BaseSequentialStream *) &SDU1,"MOVE RIGHT\n");
 	}
 	else
@@ -308,9 +308,10 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		float phaseLeft = getPhaseMax(micLeft_output,micLeft_cmplx_input);
 
 		float difPhase =  diff_phase(phaseRight - phaseLeft);
+		old_phase_diff = difPhase;
 		float freqMax = getFreqMax(micRight_output);
 
-		//move(difPhase*180/PI,freqMax);
+		move(difPhase*180/PI,freqMax);
 
 		uint16_t index400 = ceil(400/15.625);
 		float amplitude400 = micRight_output[index400];
@@ -325,7 +326,7 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 
 		//move(difPhase400*180/PI,400,amplitude400);
 
-		moveFreq(micLeft_cmplx_input,micRight_cmplx_input,400,micRight_output);
+		//moveFreq(micLeft_cmplx_input,micRight_cmplx_input,400,micRight_output);
 
 		//sends only one FFT result over 10 for 1 mic to not flood the computer
 		//sends to UART3
