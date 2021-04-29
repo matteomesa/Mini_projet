@@ -108,7 +108,9 @@ float getAmplMax(float* data)
 
 float diff_phase(float new_diff_phase)
 {
-	return (ALPHA*new_diff_phase + (1-ALPHA)*old_phase_diff);
+	temp_phase = (ALPHA*new_diff_phase + (1-ALPHA)*old_phase_diff);
+	old_phase_diff = temp_phase;
+	return temp_phase;
 }
 
 void move(float error,float freq)
