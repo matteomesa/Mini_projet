@@ -24,19 +24,44 @@ static float micRight_output[FFT_SIZE];
 static float micFront_output[FFT_SIZE];
 static float micBack_output[FFT_SIZE];
 
+static float tabFreq[4];
+static float tabTime[4];
+
 //Static float 
 static float old_phase_diff;
+
+
+//Static int
 static uint8_t nbFail;
+static uint8_t OldFreq;
+static uint8_t counter;
+static uint8_t index_tab;
+
+//Static bool
+static bool chrono;
+
 
 
 #define MIN_FREQ		20	//we don't analyze before this index to not use resources for nothing
 #define MAX_FREQ		60	//we don't analyze after this index to not use resources for nothing
 #define ALPHA			0.7 // coefficient to filter diff phase
+#define FREQ_1			535 //first frequence to detect sound
+#define FREQ_2			671 //second frequence to detect sound
+#define FREQ_3			796 //third frequence to detect sound
+
+
 
 /*
 *	Simple function used to detect the highest value in a buffer
 *	and to execute a motor command depending on it
 */
+bool almostEgal(float a,float b)
+{
+	if(abs(a-b) < 1)
+		return TRUE;
+	else
+		return false;
+}
 
 float phase(float rea, float im)
 {
@@ -112,6 +137,62 @@ float diff_phase(float new_diff_phase)
 	return temp_phase;
 }
 
+void fill_in_tabs(float maxFreq)
+{
+	//check if we are counting time
+	chprintf((BaseSequentialStream *) &SDU1, "maxfreq = %1.1f", maxFreq);
+	if(chrono)
+	{
+		// check counters
+		if((counter == 1 || counter == 2 ) && maxFreq == OldFreq)
+		{
+			counter = 0;
+		}
+		else if(counter == 3)
+		{
+			tabFreq[index_tab] = OldFreq;
+			tabTime[index_tab] = GPTD12.tim->CNT;
+			if(index_tab == 3)
+			{
+				index_tab = 0;
+			}
+			else
+			{
+				index_tab++;
+			}
+			chrono = FALSE;
+			//chprintf((BaseSequentialStream *) &SDU1," tableau freq \n  freq 1 = %1.4f, freq 2 = %1.4f, freq 3 = %1.4f, freq 4 = %1.4f \n",tabFreq[0],tabFreq[1],tabFreq[2],tabFreq[3]);
+		}
+		if(maxFreq != OldFreq)
+		{
+			counter++;
+		}		
+	}
+	else
+	{
+		// check counter
+		if((counter == 1 || counter == 2 ) && maxFreq != OldFreq)
+		{
+			counter = 0;
+		}
+		else if(counter == 3)
+		{
+            GPTD12.tim->CNT = 0;
+            chrono = TRUE;
+		}
+		// check frequency
+		if(maxFreq == OldFreq)
+		{
+			counter++;
+		}
+		else if(maxFreq == FREQ_1 || maxFreq == FREQ_2 || maxFreq == FREQ_3)
+		{
+			chprintf((BaseSequentialStream *) &SDU1, "OK");
+			OldFreq = maxFreq;
+			counter++;
+		}
+	}
+}
 void move(float error,float freq)
 {
 	float maxAmplitude = getAmplMax(micRight_output);
@@ -310,16 +391,17 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		float difPhase =  diff_phase(phaseRight - phaseLeft);
 		old_phase_diff = difPhase;
 		float freqMax = getFreqMax(micRight_output);
-
-		move(difPhase*180/PI,freqMax);
-
-		uint16_t index400 = ceil(400/15.625);
-		float amplitude400 = micRight_output[index400];
-
-		float phaseRight400 = getPhase(micRight_cmplx_input,400);
-		float phaseLeft400 = getPhase(micLeft_cmplx_input,400);
-
-		float difPhase400 =  diff_phase(phaseRight400 - phaseLeft400);
+		fill_in_tabs(freqMax);
+//
+//		move(difPhase*180/PI,freqMax);
+//
+//		uint16_t index400 = ceil(400/15.625);
+//		float amplitude400 = micRight_output[index400];
+//
+//		float phaseRight400 = getPhase(micRight_cmplx_input,400);
+//		float phaseLeft400 = getPhase(micLeft_cmplx_input,400);
+//
+//		float difPhase400 =  diff_phase(phaseRight400 - phaseLeft400);
 
 		//chprintf((BaseSequentialStream *) &SDU1, "\n diff phase 400 = %1.4f, amplitude 400 = %1.4f ",difPhase400*180/PI,amplitude400);
 		//mess_ampl400(amplitude400);
