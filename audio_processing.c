@@ -45,7 +45,7 @@ static bool chrono;
 #define MIN_FREQ		20	//we don't analyze before this index to not use resources for nothing
 #define MAX_FREQ		60	//we don't analyze after this index to not use resources for nothing
 #define ALPHA			0.7 // coefficient to filter diff phase
-#define FREQ_1			535 //first frequence to detect sound
+#define FREQ_1			531 //first frequence to detect sound
 #define FREQ_2			671 //second frequence to detect sound
 #define FREQ_3			796 //third frequence to detect sound
 
@@ -161,7 +161,8 @@ void fill_in_tabs(float maxFreq)
 				index_tab++;
 			}
 			chrono = FALSE;
-			//chprintf((BaseSequentialStream *) &SDU1," tableau freq \n  freq 1 = %1.4f, freq 2 = %1.4f, freq 3 = %1.4f, freq 4 = %1.4f \n",tabFreq[0],tabFreq[1],tabFreq[2],tabFreq[3]);
+			chprintf((BaseSequentialStream *) &SDU1,"lecture finie \n");
+			chprintf((BaseSequentialStream *) &SDU1," tableau freq \n  freq 1 = %1.4f, freq 2 = %1.4f, freq 3 = %1.4f, freq 4 = %1.4f \n",tabFreq[0],tabFreq[1],tabFreq[2],tabFreq[3]);
 		}
 		if(maxFreq != OldFreq)
 		{
