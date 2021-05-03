@@ -114,11 +114,17 @@ float diff_phase(float new_diff_phase)
 
 void move(float error,float freq)
 {
+
+	float Ampl535 = micRight_output[34];
+	float Ampl671 = micRight_output[43];
+	float Ampl343 = micRight_output[22];
+	float Ampl796 = micRight_output[51];
+	float Ampl812 = micRight_output[52];
 	float maxAmplitude = getAmplMax(micRight_output);
-	chprintf((BaseSequentialStream *) &SDU1,"NbFail = %d, difPhase = %1.4f, freq = %1.4f, amplitude = %1.4f \n",nbFail,error,freq,maxAmplitude);
+	//chprintf((BaseSequentialStream *) &SDU1,"NbFail = %d, difPhase = %1.4f, freq = %1.4f, amplitude = %1.4f \n",nbFail,error,freq,maxAmplitude);
+	chprintf((BaseSequentialStream *) &SDU1," %1.1f  %1.1f %1.1f %1.1f %1.1f a",Ampl535,Ampl671,Ampl343,Ampl796,Ampl812);
 
-
-
+	return;
 
 	//if ((freq > 2500)||(freq<850)||(abs(error) > 100))
 	if (maxAmplitude < 8000)
