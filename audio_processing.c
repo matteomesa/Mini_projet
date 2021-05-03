@@ -186,11 +186,8 @@ void fill_in_tabs(float maxFreq)
 		{
 			counter++;
 		}
-		else if( almostEgal(maxFreq,FREQ_1) || almostEgal(maxFreq,FREQ_2) || almostEgal(maxFreq,FREQ_3))
+		else 
 		{
-			chprintf((BaseSequentialStream *) &SDU1, "OK");
-			OldFreq = maxFreq;
-			counter++;
 		}
 	}
 }
