@@ -25,8 +25,8 @@ static float micFront_output[FFT_SIZE];
 static float micBack_output[FFT_SIZE];
 
 static float tabFreq[4];
-static float tabTime[4];
-static float tabPick[2];
+static uint16_t tabTime[4];
+static float tabPick[6];
 
 //Static float 
 static float old_phase_diff;
@@ -215,34 +215,33 @@ void fill_in_tabs(float maxFreq,float ampl)
 	}
 }
 
-void detect_pick(float freq, float ampl)
+void detect_pick(uint8_t id, float ampl)
 {
 	if(ampl > NOISE)
 	{
-		if((almostEgal(freq,FREQ_1) || almostEgal(freq,FREQ_2) || almostEgal(freq,FREQ_3)) && ampl > 10*tabPick[0])
+		float time = GPTD12.tim->CNT;
+		if((ampl > 4*tabPick[0])&&(time>7000))
 		{
-			if(chrono)
+			chprintf((BaseSequentialStream *) &SDU1,"pic detect, id = %d",id);
+			GPTD12.tim->CNT = 0;
+			
+			tabFreq[index_tab] = id;
+			tabTime[index_tab] = time;
+			
+			chprintf((BaseSequentialStream *) &SDU1," time = %f \n",time);
+			if(index_tab == 3)
 			{
-				tabFreq[index_tab] = freq;
-				tabTime[index_tab] = GPTD12.tim->CNT;
-				if(index_tab == 3)
-				{
-					index_tab = 0;
-				}
-				else
-				{
-					index_tab++;
-				}
-			chrono = FALSE;
+				index_tab = 0;
 			}
 			else
 			{
-				GPTD12.tim->CNT = 0;
-				chrono = TRUE;
+				index_tab++;
 			}
+			
+			
 		}
-		tabPick[0] = tabPick[1];
-		tabPick[1] = ampl;
+		tabPick[0+2*id] = tabPick[1+2*id];
+		tabPick[1+2*id] = ampl;
 	}
 }
 void move(float error,float freq)
@@ -449,7 +448,25 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		float difPhase =  diff_phase(phaseRight - phaseLeft);
 		old_phase_diff = difPhase;
 		float freqMax = getFreqMax(micRight_output);
+		float amplMax = getAmplMax(micRight_output);
+
+		float Ampl535 = micRight_output[34];
+		float Ampl671 = micRight_output[43];
+		float Ampl796 = micRight_output[51];
+
+		detect_pick(0, Ampl535);
+		detect_pick(1, Ampl671);
+		detect_pick(2, Ampl796);
+
+
+
+
+
+
+
+
 		//fill_in_tabs(freqMax);
+//		detect_pick(freqMax, amplMax);
 //
 //		move(difPhase*180/PI,freqMax);
 //
@@ -459,7 +476,7 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		uint16_t index531 = ceil(531/15.625);
 		float amplitude531 = micRight_output[index531];
 
-		chprintf((BaseSequentialStream *) &SDU1,"%1.1f a",amplitude531);
+//		chprintf((BaseSequentialStream *) &SDU1,"%1.1f a",amplitude531);
 
 
 //
