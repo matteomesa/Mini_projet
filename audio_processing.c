@@ -220,7 +220,7 @@ void detect_pick(uint8_t id, float ampl)
 	if(ampl > NOISE)
 	{
 		float time = GPTD12.tim->CNT;
-		if((ampl > 4*tabPick[0])&&(time>7000))
+		if((ampl > 4*tabPick[0+2*id])&&(time>7000))
 		{
 			chprintf((BaseSequentialStream *) &SDU1,"pic detect, id = %d",id);
 			GPTD12.tim->CNT = 0;
