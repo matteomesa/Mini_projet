@@ -29,11 +29,11 @@ static float tabTime[4];
 
 //Static float 
 static float old_phase_diff;
-
+static float OldFreq;
 
 //Static int
 static uint8_t nbFail;
-static uint8_t OldFreq;
+static float OldFreq;
 static uint8_t counter;
 static uint8_t index_tab;
 
@@ -140,7 +140,8 @@ float diff_phase(float new_diff_phase)
 void fill_in_tabs(float maxFreq)
 {
 	//check if we are counting time
-	chprintf((BaseSequentialStream *) &SDU1, "maxfreq = %1.1f", maxFreq);
+	chprintf((BaseSequentialStream *) &SDU1, " max Freq = %1.1f, counter = %d, oldFreq = %1.1f \n", maxFreq, counter, OldFreq);
+
 	if(chrono)
 	{
 		// check counters
@@ -163,7 +164,9 @@ void fill_in_tabs(float maxFreq)
 			chrono = FALSE;
 			chprintf((BaseSequentialStream *) &SDU1,"lecture finie \n");
 			chprintf((BaseSequentialStream *) &SDU1," tableau freq \n  freq 1 = %1.4f, freq 2 = %1.4f, freq 3 = %1.4f, freq 4 = %1.4f \n",tabFreq[0],tabFreq[1],tabFreq[2],tabFreq[3]);
-		}
+		return;
+	}
+
 		if(maxFreq != OldFreq)
 		{
 			counter++;
@@ -178,8 +181,11 @@ void fill_in_tabs(float maxFreq)
 		}
 		else if(counter == 3)
 		{
+			counter = 0;
             GPTD12.tim->CNT = 0;
             chrono = TRUE;
+            chprintf((BaseSequentialStream *) &SDU1, "début lecture \n");
+            return;
 		}
 		// check frequency
 		if(maxFreq == OldFreq)
@@ -190,7 +196,7 @@ void fill_in_tabs(float maxFreq)
 		{
 			if( almostEgal(maxFreq,FREQ_1) || almostEgal(maxFreq,FREQ_2) || almostEgal(maxFreq,FREQ_3))
 			{
-				chprintf((BaseSequentialStream *) &SDU1, "OK");
+				chprintf((BaseSequentialStream *) &SDU1, "ok \n");
 				OldFreq = maxFreq;
 				counter++;
 			}
@@ -401,12 +407,19 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		float difPhase =  diff_phase(phaseRight - phaseLeft);
 		old_phase_diff = difPhase;
 		float freqMax = getFreqMax(micRight_output);
-		fill_in_tabs(freqMax);
+		//fill_in_tabs(freqMax);
 //
 //		move(difPhase*180/PI,freqMax);
 //
 //		uint16_t index400 = ceil(400/15.625);
 //		float amplitude400 = micRight_output[index400];
+
+		uint16_t index531 = ceil(531/15.625);
+		float amplitude531 = micRight_output[index531];
+
+		chprintf((BaseSequentialStream *) &SDU1,"%1.1f a",amplitude531);
+
+
 //
 //		float phaseRight400 = getPhase(micRight_cmplx_input,400);
 //		float phaseLeft400 = getPhase(micLeft_cmplx_input,400);
