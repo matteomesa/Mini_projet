@@ -34,7 +34,6 @@ static float OldFreq;
 
 //Static int
 static uint8_t nbFail;
-static float OldFreq;
 static uint8_t counter;
 static uint8_t index_tab;
 
@@ -166,6 +165,7 @@ void fill_in_tabs(float maxFreq,float ampl)
 				{
 					index_tab++;
 				}
+				counter = 0;
 				chrono = FALSE;
 
 			//chprintf((BaseSequentialStream *) &SDU1," tableau freq \n  freq 1 = %1.4f, freq 2 = %1.4f, freq 3 = %1.4f, freq 4 = %1.4f \n",tabFreq[0],tabFreq[1],tabFreq[2],tabFreq[3]);
@@ -186,6 +186,7 @@ void fill_in_tabs(float maxFreq,float ampl)
 			{
         	    GPTD12.tim->CNT = 0;
             	chrono = TRUE;
+            	counter =0;
          		return;
 			}
 			// check frequency
