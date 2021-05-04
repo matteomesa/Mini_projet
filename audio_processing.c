@@ -30,11 +30,11 @@ static float tabPick[2];
 
 //Static float 
 static float old_phase_diff;
-
+static float OldFreq;
 
 //Static int
 static uint8_t nbFail;
-static uint8_t OldFreq;
+static float OldFreq;
 static uint8_t counter;
 static uint8_t index_tab;
 
@@ -49,7 +49,7 @@ static bool indexPick;
 #define MIN_FREQ		20	//we don't analyze before this index to not use resources for nothing
 #define MAX_FREQ		60	//we don't analyze after this index to not use resources for nothing
 #define ALPHA			0.7 // coefficient to filter diff phase
-#define FREQ_1			535 //first frequence to detect sound
+#define FREQ_1			531 //first frequence to detect sound
 #define FREQ_2			671 //second frequence to detect sound
 #define FREQ_3			796 //third frequence to detect sound
 #define NOISE 			10000
@@ -143,7 +143,7 @@ float diff_phase(float new_diff_phase)
 
 void fill_in_tabs(float maxFreq,float ampl)
 {
-	if(ampl < NOISE)
+	if(ampl > NOISE)
 	{
 		//check if we are counting time
 		chprintf((BaseSequentialStream *) &SDU1, "maxfreq = %1.1f", maxFreq);
@@ -202,7 +202,16 @@ void fill_in_tabs(float maxFreq,float ampl)
 					counter++;
 				}
 			}
-		}
+			chrono = FALSE;
+			chprintf((BaseSequentialStream *) &SDU1,"lecture finie \n");
+			chprintf((BaseSequentialStream *) &SDU1," tableau freq \n  freq 1 = %1.4f, freq 2 = %1.4f, freq 3 = %1.4f, freq 4 = %1.4f \n",tabFreq[0],tabFreq[1],tabFreq[2],tabFreq[3]);
+		return;
+	}
+
+		if(maxFreq != OldFreq)
+		{
+			counter++;
+		}		
 	}
 }
 
@@ -446,6 +455,13 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 //
 //		uint16_t index400 = ceil(400/15.625);
 //		float amplitude400 = micRight_output[index400];
+
+		uint16_t index531 = ceil(531/15.625);
+		float amplitude531 = micRight_output[index531];
+
+		chprintf((BaseSequentialStream *) &SDU1,"%1.1f a",amplitude531);
+
+
 //
 //		float phaseRight400 = getPhase(micRight_cmplx_input,400);
 //		float phaseLeft400 = getPhase(micLeft_cmplx_input,400);
