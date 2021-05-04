@@ -26,6 +26,7 @@ static float micBack_output[FFT_SIZE];
 
 static float tabFreq[4];
 static float tabTime[4];
+static float tabPick[2];
 
 //Static float 
 static float old_phase_diff;
@@ -37,8 +38,11 @@ static uint8_t OldFreq;
 static uint8_t counter;
 static uint8_t index_tab;
 
+
 //Static bool
 static bool chrono;
+static bool indexPick;
+
 
 
 
@@ -48,7 +52,7 @@ static bool chrono;
 #define FREQ_1			535 //first frequence to detect sound
 #define FREQ_2			671 //second frequence to detect sound
 #define FREQ_3			796 //third frequence to detect sound
-
+#define NOISE 			10000
 
 
 /*
@@ -137,63 +141,99 @@ float diff_phase(float new_diff_phase)
 	return temp_phase;
 }
 
-void fill_in_tabs(float maxFreq)
+void fill_in_tabs(float maxFreq,float ampl)
 {
-	//check if we are counting time
-	chprintf((BaseSequentialStream *) &SDU1, "maxfreq = %1.1f", maxFreq);
-	if(chrono)
+	if(ampl < NOISE)
 	{
-		// check counters
-		if((counter == 1 || counter == 2 ) && maxFreq == OldFreq)
+		//check if we are counting time
+		chprintf((BaseSequentialStream *) &SDU1, "maxfreq = %1.1f", maxFreq);
+		if(chrono)
 		{
-			counter = 0;
-		}
-		else if(counter == 3)
-		{
-			tabFreq[index_tab] = OldFreq;
-			tabTime[index_tab] = GPTD12.tim->CNT;
-			if(index_tab == 3)
+			// check counters
+			if((counter == 1 || counter == 2 ) && maxFreq == OldFreq)
 			{
-				index_tab = 0;
+				counter = 0;
+			}
+			else if(counter == 3)
+			{
+				tabFreq[index_tab] = OldFreq;
+				tabTime[index_tab] = GPTD12.tim->CNT;
+				if(index_tab == 3)
+				{
+					index_tab = 0;
+				}
+				else
+				{
+					index_tab++;
+				}
+				chrono = FALSE;
+
+			//chprintf((BaseSequentialStream *) &SDU1," tableau freq \n  freq 1 = %1.4f, freq 2 = %1.4f, freq 3 = %1.4f, freq 4 = %1.4f \n",tabFreq[0],tabFreq[1],tabFreq[2],tabFreq[3]);
+			}
+			if(maxFreq != OldFreq)
+			{
+				counter++;
+			}		
+		}
+		else
+		{
+			// check counter
+			if((counter == 1 || counter == 2 ) && maxFreq != OldFreq)
+			{
+				counter = 0;
+			}
+			else if(counter == 3)
+			{
+        	    GPTD12.tim->CNT = 0;
+            	chrono = TRUE;
+         		return;
+			}
+			// check frequency
+			if(maxFreq == OldFreq)
+			{
+				counter++;
+			}
+			else 
+			{
+				if( almostEgal(maxFreq,FREQ_1) || almostEgal(maxFreq,FREQ_2) || almostEgal(maxFreq,FREQ_3))
+				{
+					chprintf((BaseSequentialStream *) &SDU1, "OK");
+					OldFreq = maxFreq;
+					counter++;
+				}
+			}
+		}
+	}
+}
+
+void detect_pick(float freq, float ampl)
+{
+	if(ampl > NOISE)
+	{
+		if((almostEgal(freq,FREQ_1) || almostEgal(freq,FREQ_2) || almostEgal(freq,FREQ_3)) && ampl > 10*tabPick[0])
+		{
+			if(chrono)
+			{
+				tabFreq[index_tab] = freq;
+				tabTime[index_tab] = GPTD12.tim->CNT;
+				if(index_tab == 3)
+				{
+					index_tab = 0;
+				}
+				else
+				{
+					index_tab++;
+				}
+			chrono = FALSE;
 			}
 			else
 			{
-				index_tab++;
-			}
-			chrono = FALSE;
-			//chprintf((BaseSequentialStream *) &SDU1," tableau freq \n  freq 1 = %1.4f, freq 2 = %1.4f, freq 3 = %1.4f, freq 4 = %1.4f \n",tabFreq[0],tabFreq[1],tabFreq[2],tabFreq[3]);
-		}
-		if(maxFreq != OldFreq)
-		{
-			counter++;
-		}		
-	}
-	else
-	{
-		// check counter
-		if((counter == 1 || counter == 2 ) && maxFreq != OldFreq)
-		{
-			counter = 0;
-		}
-		else if(counter == 3)
-		{
-            GPTD12.tim->CNT = 0;
-            chrono = TRUE;
-		}
-		// check frequency
-		if(maxFreq == OldFreq)
-		{
-			counter++;
-		}
-		else 
-		{
-			if( almostEgal(maxFreq,FREQ_1) || almostEgal(maxFreq,FREQ_2) || almostEgal(maxFreq,FREQ_3))
-			{
-				chprintf((BaseSequentialStream *) &SDU1, "OK");
-				OldFreq = maxFreq;
-				counter++;
+				GPTD12.tim->CNT = 0;
+				chrono = TRUE;
 			}
 		}
+		tabPick[0] = tabPick[1];
+		tabPick[1] = ampl;
 	}
 }
 void move(float error,float freq)
@@ -400,7 +440,7 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		float difPhase =  diff_phase(phaseRight - phaseLeft);
 		old_phase_diff = difPhase;
 		float freqMax = getFreqMax(micRight_output);
-		fill_in_tabs(freqMax);
+		//fill_in_tabs(freqMax);
 //
 //		move(difPhase*180/PI,freqMax);
 //
