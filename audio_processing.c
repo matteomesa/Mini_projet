@@ -52,6 +52,16 @@ static bool indexPick;
 #define FREQ_2			671 //second frequence to detect sound
 #define FREQ_3			796 //third frequence to detect sound
 #define NOISE 			10000
+#define TIME_1			1
+#define TIME_2			1
+#define TIME_3			1
+#define TIME_4			1
+
+#define LIM_1			1
+#define LIM_2			1
+#define LIM_3			1
+#define LIM_4			1
+
 
 
 /*
@@ -66,6 +76,13 @@ bool almostEgal(float a,float b)
 		return false;
 }
 
+bool almostEgalLim(float a,float b,float lim)
+{
+	if(abs(a-b)<lim)
+		return TRUE;
+	else
+		return FALSE;
+}
 float phase(float rea, float im)
 {
 	return atan2(im,rea);
@@ -243,6 +260,62 @@ void detect_pick(uint8_t id, float ampl)
 		}
 		tabPick[0+2*id] = tabPick[1+2*id];
 		tabPick[1+2*id] = ampl;
+	}
+}
+
+bool check_tab( uint16_t tab[4])
+{
+	uint16_t tab_prime[8];
+	for(uint8_t i = 0;i < 4;i++)
+	{
+		tab_prime[i] = tab[i];
+		tab_prime[i] = tab[i];
+	}
+	for(uint8_t i = 0; i < 4 *2;i++)
+	{
+		if(i < 5)
+		{
+			if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i+1],TIME_2,LIM_3) && almostEgalLim(tab[i+2],TIME_3,LIM_3) && almostEgalLim(tab[i+2],TIME_4,LIM_4))
+			{
+				return TRUE;
+			}
+			else 
+			{
+				return FALSE;
+			}
+		}
+		else if( i = 5)
+		{
+			if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i+1],TIME_2,LIM_3) && almostEgalLim(tab[i+2],TIME_3,LIM_3) && almostEgalLim(tab[i-5],TIME_4,LIM_4))
+			{
+				return TRUE;	
+			}
+			else
+			{
+				return FALSE;
+			}		
+		}
+		else if( i = 6)
+		{
+			if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i+1],TIME_2,LIM_3) && almostEgalLim(tab[i-6],TIME_3,LIM_3) && almostEgalLim(tab[i-5],TIME_4,LIM_4))
+			{
+				return TRUE;	
+			}
+			else
+			{
+				return FALSE;
+			}		
+		}else if( i = 7)
+		{
+			if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i-7],TIME_2,LIM_3) && almostEgalLim(tab[i-6],TIME_3,LIM_3) && almostEgalLim(tab[i-5],TIME_4,LIM_4))
+			{
+				return TRUE;	
+			}
+			else
+			{
+				return FALSE;
+			}		
+		}
 	}
 }
 void move(float error,float freq)
