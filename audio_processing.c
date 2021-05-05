@@ -68,13 +68,7 @@ static bool indexPick;
 *	Simple function used to detect the highest value in a buffer
 *	and to execute a motor command depending on it
 */
-bool almostEgal(float a,float b)
-{
-	if(abs(a-b) < 1)
-		return TRUE;
-	else
-		return false;
-}
+
 
 bool almostEgalLim(float a,float b,float lim)
 {
@@ -157,82 +151,6 @@ float diff_phase(float new_diff_phase)
 	return temp_phase;
 }
 
-void fill_in_tabs(float maxFreq,float ampl)
-{
-	if(ampl > NOISE)
-	{
-		//check if we are counting time
-		chprintf((BaseSequentialStream *) &SDU1, "maxfreq = %1.1f", maxFreq);
-		if(chrono)
-		{
-			// check counters
-			if((counter == 1 || counter == 2 ) && maxFreq == OldFreq)
-			{
-				counter = 0;
-			}
-			else if(counter == 3)
-			{
-				tabFreq[index_tab] = OldFreq;
-				tabTime[index_tab] = GPTD12.tim->CNT;
-				if(index_tab == 3)
-				{
-					index_tab = 0;
-				}
-				else
-				{
-					index_tab++;
-				}
-				counter = 0;
-				chrono = FALSE;
-
-			//chprintf((BaseSequentialStream *) &SDU1," tableau freq \n  freq 1 = %1.4f, freq 2 = %1.4f, freq 3 = %1.4f, freq 4 = %1.4f \n",tabFreq[0],tabFreq[1],tabFreq[2],tabFreq[3]);
-			}
-			if(maxFreq != OldFreq)
-			{
-				counter++;
-			}		
-		}
-		else
-		{
-			// check counter
-			if((counter == 1 || counter == 2 ) && maxFreq != OldFreq)
-			{
-				counter = 0;
-			}
-			else if(counter == 3)
-			{
-        	    GPTD12.tim->CNT = 0;
-            	chrono = TRUE;
-            	counter =0;
-         		return;
-			}
-			// check frequency
-			if(maxFreq == OldFreq)
-			{
-				counter++;
-			}
-			else 
-			{
-				if( almostEgal(maxFreq,FREQ_1) || almostEgal(maxFreq,FREQ_2) || almostEgal(maxFreq,FREQ_3))
-				{
-					chprintf((BaseSequentialStream *) &SDU1, "OK");
-					OldFreq = maxFreq;
-					counter++;
-				}
-			}
-			chrono = FALSE;
-			chprintf((BaseSequentialStream *) &SDU1,"lecture finie \n");
-			chprintf((BaseSequentialStream *) &SDU1," tableau freq \n  freq 1 = %1.4f, freq 2 = %1.4f, freq 3 = %1.4f, freq 4 = %1.4f \n",tabFreq[0],tabFreq[1],tabFreq[2],tabFreq[3]);
-		return;
-	}
-
-		if(maxFreq != OldFreq)
-		{
-			counter++;
-		}		
-	}
-}
-
 void detect_pick(uint8_t id, float ampl)
 {
 	if(ampl > NOISE)
@@ -265,15 +183,10 @@ void detect_pick(uint8_t id, float ampl)
 
 bool check_tab( uint16_t tab[4])
 {
-	uint16_t tab_prime[8];
-	for(uint8_t i = 0;i < 4;i++)
-	{
-		tab_prime[i] = tab[i];
-		tab_prime[i] = tab[i];
-	}
+	
 	for(uint8_t i = 0; i < 4 *2;i++)
 	{
-		if(i < 5)
+		if(i == 0)
 		{
 			if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i+1],TIME_2,LIM_3) && almostEgalLim(tab[i+2],TIME_3,LIM_3) && almostEgalLim(tab[i+2],TIME_4,LIM_4))
 			{
@@ -284,9 +197,9 @@ bool check_tab( uint16_t tab[4])
 				return FALSE;
 			}
 		}
-		else if( i = 5)
+		else if( i == 1)
 		{
-			if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i+1],TIME_2,LIM_3) && almostEgalLim(tab[i+2],TIME_3,LIM_3) && almostEgalLim(tab[i-5],TIME_4,LIM_4))
+			if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i+1],TIME_2,LIM_3) && almostEgalLim(tab[i+2],TIME_3,LIM_3) && almostEgalLim(tab[i-1],TIME_4,LIM_4))
 			{
 				return TRUE;	
 			}
@@ -295,9 +208,9 @@ bool check_tab( uint16_t tab[4])
 				return FALSE;
 			}		
 		}
-		else if( i = 6)
+		else if( i == 2)
 		{
-			if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i+1],TIME_2,LIM_3) && almostEgalLim(tab[i-6],TIME_3,LIM_3) && almostEgalLim(tab[i-5],TIME_4,LIM_4))
+			if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i+1],TIME_2,LIM_3) && almostEgalLim(tab[i-2],TIME_3,LIM_3) && almostEgalLim(tab[i-1],TIME_4,LIM_4))
 			{
 				return TRUE;	
 			}
@@ -305,9 +218,9 @@ bool check_tab( uint16_t tab[4])
 			{
 				return FALSE;
 			}		
-		}else if( i = 7)
+		}else if( i == 3)
 		{
-			if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i-7],TIME_2,LIM_3) && almostEgalLim(tab[i-6],TIME_3,LIM_3) && almostEgalLim(tab[i-5],TIME_4,LIM_4))
+			if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i-3],TIME_2,LIM_3) && almostEgalLim(tab[i-2],TIME_3,LIM_3) && almostEgalLim(tab[i-1],TIME_4,LIM_4))
 			{
 				return TRUE;	
 			}
