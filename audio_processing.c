@@ -38,6 +38,9 @@ static float OldFreq;
 static uint8_t counter;
 static uint8_t index_tab;
 
+static float rightDifPhase;
+static float leftDifPhase;
+
 
 //Static bool
 static bool chrono;
@@ -146,7 +149,7 @@ void fill_in_tabs(float maxFreq,float ampl)
 	if(ampl > NOISE)
 	{
 		//check if we are counting time
-		chprintf((BaseSequentialStream *) &SDU1, "maxfreq = %1.1f", maxFreq);
+		//chprintf((BaseSequentialStream *) &SDU1, "maxfreq = %1.1f", maxFreq);
 		if(chrono)
 		{
 			// check counters
@@ -203,8 +206,8 @@ void fill_in_tabs(float maxFreq,float ampl)
 				}
 			}
 			chrono = FALSE;
-			chprintf((BaseSequentialStream *) &SDU1,"lecture finie \n");
-			chprintf((BaseSequentialStream *) &SDU1," tableau freq \n  freq 1 = %1.4f, freq 2 = %1.4f, freq 3 = %1.4f, freq 4 = %1.4f \n",tabFreq[0],tabFreq[1],tabFreq[2],tabFreq[3]);
+			//chprintf((BaseSequentialStream *) &SDU1,"lecture finie \n");
+			//chprintf((BaseSequentialStream *) &SDU1," tableau freq \n  freq 1 = %1.4f, freq 2 = %1.4f, freq 3 = %1.4f, freq 4 = %1.4f \n",tabFreq[0],tabFreq[1],tabFreq[2],tabFreq[3]);
 		return;
 	}
 
@@ -222,13 +225,13 @@ void detect_pick(uint8_t id, float ampl)
 		float time = GPTD12.tim->CNT;
 		if((ampl > 4*tabPick[0+2*id])&&(time>7000))
 		{
-			chprintf((BaseSequentialStream *) &SDU1,"pic detect, id = %d",id);
+			//chprintf((BaseSequentialStream *) &SDU1,"pic detect, id = %d",id);
 			GPTD12.tim->CNT = 0;
 			
 			tabFreq[index_tab] = id;
 			tabTime[index_tab] = time;
 			
-			chprintf((BaseSequentialStream *) &SDU1," time = %f \n",time);
+			//chprintf((BaseSequentialStream *) &SDU1," time = %f \n",time);
 			if(index_tab == 3)
 			{
 				index_tab = 0;
@@ -389,6 +392,15 @@ void mess_ampl400(float ampl)
 *							so we have [micRight1, micLeft1, micBack1, micFront1, micRight2, etc...]
 *	uint16_t num_samples	Tells how many data we get in total (should always be 640)
 */
+
+float getRightDifPhase()
+{return rightDifPhase;}
+
+float getLeftDifPhase()
+{return leftDifPhase;}
+
+
+
 void processAudioData(int16_t *data, uint16_t num_samples){
 
 	/*
@@ -454,9 +466,14 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		float Ampl671 = micRight_output[43];
 		float Ampl796 = micRight_output[51];
 
-		detect_pick(0, Ampl535);
-		detect_pick(1, Ampl671);
-		detect_pick(2, Ampl796);
+		//detect_pick(0, Ampl535);
+		//detect_pick(1, Ampl671);
+		//detect_pick(2, Ampl796);
+
+		rightDifPhase = diff_phase(phaseRight - phaseLeft);
+		leftDifPhase = diff_phase(phaseLeft - phaseRight);
+
+
 
 
 
