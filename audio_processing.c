@@ -34,7 +34,6 @@ static float OldFreq;
 
 //Static int
 static uint8_t nbFail;
-static float OldFreq;
 static uint8_t counter;
 static uint8_t index_tab;
 
@@ -56,20 +55,31 @@ static bool indexPick;
 #define FREQ_2			671 //second frequence to detect sound
 #define FREQ_3			796 //third frequence to detect sound
 #define NOISE 			10000
+#define TIME_1			1
+#define TIME_2			1
+#define TIME_3			1
+#define TIME_4			1
+
+#define LIM_1			1
+#define LIM_2			1
+#define LIM_3			1
+#define LIM_4			1
+
 
 
 /*
 *	Simple function used to detect the highest value in a buffer
 *	and to execute a motor command depending on it
 */
-bool almostEgal(float a,float b)
+
+
+bool almostEgalLim(float a,float b,float lim)
 {
-	if(abs(a-b) < 1)
+	if(abs(a-b)<lim)
 		return TRUE;
 	else
-		return false;
+		return FALSE;
 }
-
 float phase(float rea, float im)
 {
 	return atan2(im,rea);
@@ -144,80 +154,6 @@ float diff_phase(float new_diff_phase)
 	return temp_phase;
 }
 
-void fill_in_tabs(float maxFreq,float ampl)
-{
-	if(ampl > NOISE)
-	{
-		//check if we are counting time
-		//chprintf((BaseSequentialStream *) &SDU1, "maxfreq = %1.1f", maxFreq);
-		if(chrono)
-		{
-			// check counters
-			if((counter == 1 || counter == 2 ) && maxFreq == OldFreq)
-			{
-				counter = 0;
-			}
-			else if(counter == 3)
-			{
-				tabFreq[index_tab] = OldFreq;
-				tabTime[index_tab] = GPTD12.tim->CNT;
-				if(index_tab == 3)
-				{
-					index_tab = 0;
-				}
-				else
-				{
-					index_tab++;
-				}
-				chrono = FALSE;
-
-			//chprintf((BaseSequentialStream *) &SDU1," tableau freq \n  freq 1 = %1.4f, freq 2 = %1.4f, freq 3 = %1.4f, freq 4 = %1.4f \n",tabFreq[0],tabFreq[1],tabFreq[2],tabFreq[3]);
-			}
-			if(maxFreq != OldFreq)
-			{
-				counter++;
-			}		
-		}
-		else
-		{
-			// check counter
-			if((counter == 1 || counter == 2 ) && maxFreq != OldFreq)
-			{
-				counter = 0;
-			}
-			else if(counter == 3)
-			{
-        	    GPTD12.tim->CNT = 0;
-            	chrono = TRUE;
-         		return;
-			}
-			// check frequency
-			if(maxFreq == OldFreq)
-			{
-				counter++;
-			}
-			else 
-			{
-				if( almostEgal(maxFreq,FREQ_1) || almostEgal(maxFreq,FREQ_2) || almostEgal(maxFreq,FREQ_3))
-				{
-					chprintf((BaseSequentialStream *) &SDU1, "OK");
-					OldFreq = maxFreq;
-					counter++;
-				}
-			}
-			chrono = FALSE;
-			//chprintf((BaseSequentialStream *) &SDU1,"lecture finie \n");
-			//chprintf((BaseSequentialStream *) &SDU1," tableau freq \n  freq 1 = %1.4f, freq 2 = %1.4f, freq 3 = %1.4f, freq 4 = %1.4f \n",tabFreq[0],tabFreq[1],tabFreq[2],tabFreq[3]);
-		return;
-	}
-
-		if(maxFreq != OldFreq)
-		{
-			counter++;
-		}		
-	}
-}
-
 void detect_pick(uint8_t id, float ampl)
 {
 	if(ampl > NOISE)
@@ -245,6 +181,57 @@ void detect_pick(uint8_t id, float ampl)
 		}
 		tabPick[0+2*id] = tabPick[1+2*id];
 		tabPick[1+2*id] = ampl;
+	}
+}
+
+bool check_tab( uint16_t tab[4])
+{
+	
+	for(uint8_t i = 0; i < 4 *2;i++)
+	{
+		if(i == 0)
+		{
+			if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i+1],TIME_2,LIM_3) && almostEgalLim(tab[i+2],TIME_3,LIM_3) && almostEgalLim(tab[i+2],TIME_4,LIM_4))
+			{
+				return TRUE;
+			}
+			else 
+			{
+				return FALSE;
+			}
+		}
+		else if( i == 1)
+		{
+			if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i+1],TIME_2,LIM_3) && almostEgalLim(tab[i+2],TIME_3,LIM_3) && almostEgalLim(tab[i-1],TIME_4,LIM_4))
+			{
+				return TRUE;	
+			}
+			else
+			{
+				return FALSE;
+			}		
+		}
+		else if( i == 2)
+		{
+			if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i+1],TIME_2,LIM_3) && almostEgalLim(tab[i-2],TIME_3,LIM_3) && almostEgalLim(tab[i-1],TIME_4,LIM_4))
+			{
+				return TRUE;	
+			}
+			else
+			{
+				return FALSE;
+			}		
+		}else if( i == 3)
+		{
+			if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i-3],TIME_2,LIM_3) && almostEgalLim(tab[i-2],TIME_3,LIM_3) && almostEgalLim(tab[i-1],TIME_4,LIM_4))
+			{
+				return TRUE;	
+			}
+			else
+			{
+				return FALSE;
+			}		
+		}
 	}
 }
 void move(float error,float freq)
