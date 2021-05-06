@@ -184,50 +184,55 @@ void detect_pick(uint8_t id, float ampl)
 bool check_tab( uint16_t tab[4])
 {
 	
-	for(uint8_t i = 0; i < 4 *2;i++)
+	for(uint8_t i = 0; i < 4 ;i++)
 	{
-		if(i == 0)
+		bool checkTab;
+		switch(i)
 		{
-			if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i+1],TIME_2,LIM_3) && almostEgalLim(tab[i+2],TIME_3,LIM_3) && almostEgalLim(tab[i+2],TIME_4,LIM_4))
+			case 0:
 			{
-				return TRUE;
+				if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i+1],TIME_2,LIM_3) && almostEgalLim(tab[i+2],TIME_3,LIM_3) && almostEgalLim(tab[i+2],TIME_4,LIM_4))
+				{
+					return TRUE;
+				}
+				else 
+				{
+					break;
+				}
 			}
-			else 
+			case 1:
 			{
-				return FALSE;
+				if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i+1],TIME_2,LIM_3) && almostEgalLim(tab[i+2],TIME_3,LIM_3) && almostEgalLim(tab[i-1],TIME_4,LIM_4))
+				{
+					return TRUE;
+				}
+				else
+				{
+					break;
+				}		
 			}
-		}
-		else if( i == 1)
-		{
-			if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i+1],TIME_2,LIM_3) && almostEgalLim(tab[i+2],TIME_3,LIM_3) && almostEgalLim(tab[i-1],TIME_4,LIM_4))
+			case 2:
 			{
-				return TRUE;	
+				if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i+1],TIME_2,LIM_3) && almostEgalLim(tab[i-2],TIME_3,LIM_3) && almostEgalLim(tab[i-1],TIME_4,LIM_4))
+				{
+					return TRUE;
+				}
+				else
+				{
+					break;
+				}		
 			}
-			else
+			case 3:
 			{
-				return FALSE;
-			}		
-		}
-		else if( i == 2)
-		{
-			if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i+1],TIME_2,LIM_3) && almostEgalLim(tab[i-2],TIME_3,LIM_3) && almostEgalLim(tab[i-1],TIME_4,LIM_4))
-			{
-				return TRUE;	
+				if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i-3],TIME_2,LIM_3) && almostEgalLim(tab[i-2],TIME_3,LIM_3) && almostEgalLim(tab[i-1],TIME_4,LIM_4))
+				{
+					return TRUE;
+				}
+				else	
+				{
+					return FALSE;
+				}		
 			}
-			else
-			{
-				return FALSE;
-			}		
-		}else if( i == 3)
-		{
-			if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i-3],TIME_2,LIM_3) && almostEgalLim(tab[i-2],TIME_3,LIM_3) && almostEgalLim(tab[i-1],TIME_4,LIM_4))
-			{
-				return TRUE;	
-			}
-			else
-			{
-				return FALSE;
-			}		
 		}
 	}
 }
