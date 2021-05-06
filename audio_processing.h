@@ -24,6 +24,10 @@ float phase(float rea, float im);
 
 float getFreqMax(float* data);
 
+float getRightDifPhase();
+
+float getLeftDifPhase();
+
 
 void processAudioData(int16_t *data, uint16_t num_samples);
 

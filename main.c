@@ -17,6 +17,7 @@
 #include <communications.h>
 #include <arm_math.h>
 
+static uint8_t i = 0;
 
 
 static void serial_start(void)
@@ -77,6 +78,11 @@ int main(void)
     /* Infinite loop. */
     while (1) 
     {
+        chprintf((BaseSequentialStream *) &SDU1,"%1.5f %1.5f %1.5f a",getRightDifPhase(),getLeftDifPhase(),getRightDifPhase()+getLeftDifPhase());
+        set_body_led(i);
+        if (i == 1)
+              {i = 0;}
+        else{i = 1;}
     	//uint16_t dist = VL53L0X_get_dist_mm();
     	//chprintf((BaseSequentialStream *) &SDU1, " dist = %d \n ",dist);
     	chThdSleepMilliseconds(5000);
@@ -91,3 +97,5 @@ void __stack_chk_fail(void)
 {
     chSysHalt("Stack smashing detected");
 }
+
+
