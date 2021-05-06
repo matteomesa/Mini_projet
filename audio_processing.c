@@ -180,7 +180,41 @@ void detect_pick(uint8_t id, float ampl)
 		tabPick[1+2*id] = ampl;
 	}
 }
-
+void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
+{
+	if((amplL-amplR) > 0 && (amplF-amplB) > 0 && (amplL-amplF) < 0)
+	{
+		//rotation vers la gauche vitesse 1
+	}
+	if((amplL-amplR) > 0 && (amplF-amplB) > 0 && (amplL-amplF) > 0)
+	{
+		//rotation vers la gauche vitesse 2
+	}
+	if((amplL-amplR) < 0 && (amplF-amplB) > 0 && (amplF-amplR) > 0)
+	{
+		//rotation vers la droite vitesse 1
+	}
+	if((amplL-amplR) < 0 && (amplF-amplB) > 0 && (amplF-amplR) < 0)
+	{
+		//rotation vers la droite vitesse 2
+	}
+	if((amplL-amplR) < 0 && (amplF-amplB) < 0 && (amplR-amplB) > 0)
+	{
+		// rotation vers la droite vitesse 3 ou quart de tour vers la droite + rotation vers la droite vitesse 1
+	}
+	if((amplL-amplR) < 0 && (amplF-amplB) < 0 && (amplR-amplB) < 0)
+	{
+		// rotation vers la droite vitesse 4 ou quart de tour vers la droite + rotation vers la droite vitesse 2
+	}
+	if((amplL-amplR) > 0 && (amplF-amplB) < 0 && (amplB-amplL) > 0)
+	{
+		// rotation vers la gauche vitesse 3 ou quart de tour vers la gauche + rotation vers la gauche vitesse 1
+	}
+	if((amplL-amplR) > 0 && (amplF-amplB) < 0 && (amplB-amplL) < 0)
+	{
+		// rotation vers la gauche vitesse 4 ou quart de tour vers la gauche + rotation vers la gauche vitesse 2
+	}
+}
 bool check_tab( uint16_t tab[4])
 {
 	
@@ -452,13 +486,6 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		detect_pick(0, Ampl535);
 		detect_pick(1, Ampl671);
 		detect_pick(2, Ampl796);
-
-
-
-
-
-
-
 
 		//fill_in_tabs(freqMax);
 //		detect_pick(freqMax, amplMax);
