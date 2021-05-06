@@ -17,12 +17,12 @@ static BSEMAPHORE_DECL(sendToComputer_sem, TRUE);
 //2 times FFT_SIZE because these arrays contain complex numbers (real + imaginary)
 static float micLeft_cmplx_input[2 * FFT_SIZE];
 static float micRight_cmplx_input[2 * FFT_SIZE];
-
+static float micFront_cmplx_input[2 * FFT_SIZE];
 //Arrays containing the computed magnitude of the complex numbers
 static float micLeft_output[FFT_SIZE];
 static float micRight_output[FFT_SIZE];
 static float micFront_output[FFT_SIZE];
-static float micBack_output[FFT_SIZE];
+
 
 static float tabFreq[4];
 static uint16_t tabTime[4];
@@ -399,11 +399,13 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		//construct an array of complex numbers. Put 0 to the imaginary part
 		micRight_cmplx_input[nb_samples] = (float)data[i + MIC_RIGHT];
 		micLeft_cmplx_input[nb_samples] = (float)data[i + MIC_LEFT];
+		micFront_cmplx_input[nb_samples] = (float)data[i+ MIC_FRONT];
 
 		nb_samples++;
 
 		micRight_cmplx_input[nb_samples] = 0;
 		micLeft_cmplx_input[nb_samples] = 0;
+		micFront_cmplx_input[nb_samples] = 0;
 
 		nb_samples++;
 
@@ -422,6 +424,7 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 
 		doFFT_optimized(FFT_SIZE, micRight_cmplx_input);
 		doFFT_optimized(FFT_SIZE, micLeft_cmplx_input);
+		doFFT_optimized(FFT_SIZE, micFront_cmplx_input);
 
 		/*	Magnitude processing
 		*
@@ -432,7 +435,7 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		*/
 		arm_cmplx_mag_f32(micRight_cmplx_input, micRight_output, FFT_SIZE);
 		arm_cmplx_mag_f32(micLeft_cmplx_input, micLeft_output, FFT_SIZE);
-
+		arm_cmplx_mag_f32(micFront_cmplx_input, micFront_output, FFT_SIZE);
 
 		float phaseRight = getPhaseMax(micRight_output,micRight_cmplx_input);
 		float phaseLeft = getPhaseMax(micLeft_output,micLeft_cmplx_input);
@@ -442,9 +445,9 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		float freqMax = getFreqMax(micRight_output);
 		float amplMax = getAmplMax(micRight_output);
 
-		float Ampl535 = micRight_output[34];
-		float Ampl671 = micRight_output[43];
-		float Ampl796 = micRight_output[51];
+		float Ampl535 = micFront_output[34];
+		float Ampl671 = micFront_output[43];
+		float Ampl796 = micFront_output[51];
 
 		detect_pick(0, Ampl535);
 		detect_pick(1, Ampl671);
