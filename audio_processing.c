@@ -24,6 +24,7 @@ static float micBack_cmplx_input[2 * FFT_SIZE];
 static float micLeft_output[FFT_SIZE];
 static float micRight_output[FFT_SIZE];
 static float micFront_output[FFT_SIZE];
+
 static float micBack_output[FFT_SIZE];
 
 static float tabFreq[4];
@@ -195,54 +196,93 @@ void detect_pick(uint8_t id, float ampl)
 		tabPick[1+2*id] = ampl;
 	}
 }
-
+void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
+{
+	if((amplL-amplR) > 0 && (amplF-amplB) > 0 && (amplL-amplF) < 0)
+	{
+		//rotation vers la gauche vitesse 1
+	}
+	if((amplL-amplR) > 0 && (amplF-amplB) > 0 && (amplL-amplF) > 0)
+	{
+		//rotation vers la gauche vitesse 2
+	}
+	if((amplL-amplR) < 0 && (amplF-amplB) > 0 && (amplF-amplR) > 0)
+	{
+		//rotation vers la droite vitesse 1
+	}
+	if((amplL-amplR) < 0 && (amplF-amplB) > 0 && (amplF-amplR) < 0)
+	{
+		//rotation vers la droite vitesse 2
+	}
+	if((amplL-amplR) < 0 && (amplF-amplB) < 0 && (amplR-amplB) > 0)
+	{
+		// rotation vers la droite vitesse 3 ou quart de tour vers la droite + rotation vers la droite vitesse 1
+	}
+	if((amplL-amplR) < 0 && (amplF-amplB) < 0 && (amplR-amplB) < 0)
+	{
+		// rotation vers la droite vitesse 4 ou quart de tour vers la droite + rotation vers la droite vitesse 2
+	}
+	if((amplL-amplR) > 0 && (amplF-amplB) < 0 && (amplB-amplL) > 0)
+	{
+		// rotation vers la gauche vitesse 3 ou quart de tour vers la gauche + rotation vers la gauche vitesse 1
+	}
+	if((amplL-amplR) > 0 && (amplF-amplB) < 0 && (amplB-amplL) < 0)
+	{
+		// rotation vers la gauche vitesse 4 ou quart de tour vers la gauche + rotation vers la gauche vitesse 2
+	}
+}
 bool check_tab( uint16_t tab[4])
 {
 	
-	for(uint8_t i = 0; i < 4 *2;i++)
+	for(uint8_t i = 0; i < 4 ;i++)
 	{
-		if(i == 0)
+		bool checkTab;
+		switch(i)
 		{
-			if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i+1],TIME_2,LIM_3) && almostEgalLim(tab[i+2],TIME_3,LIM_3) && almostEgalLim(tab[i+2],TIME_4,LIM_4))
+			case 0:
 			{
-				return TRUE;
+				if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i+1],TIME_2,LIM_3) && almostEgalLim(tab[i+2],TIME_3,LIM_3) && almostEgalLim(tab[i+2],TIME_4,LIM_4))
+				{
+					return TRUE;
+				}
+				else 
+				{
+					break;
+				}
 			}
-			else 
+			case 1:
 			{
-				return FALSE;
+				if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i+1],TIME_2,LIM_3) && almostEgalLim(tab[i+2],TIME_3,LIM_3) && almostEgalLim(tab[i-1],TIME_4,LIM_4))
+				{
+					return TRUE;
+				}
+				else
+				{
+					break;
+				}		
 			}
-		}
-		else if( i == 1)
-		{
-			if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i+1],TIME_2,LIM_3) && almostEgalLim(tab[i+2],TIME_3,LIM_3) && almostEgalLim(tab[i-1],TIME_4,LIM_4))
+			case 2:
 			{
-				return TRUE;	
+				if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i+1],TIME_2,LIM_3) && almostEgalLim(tab[i-2],TIME_3,LIM_3) && almostEgalLim(tab[i-1],TIME_4,LIM_4))
+				{
+					return TRUE;
+				}
+				else
+				{
+					break;
+				}		
 			}
-			else
+			case 3:
 			{
-				return FALSE;
-			}		
-		}
-		else if( i == 2)
-		{
-			if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i+1],TIME_2,LIM_3) && almostEgalLim(tab[i-2],TIME_3,LIM_3) && almostEgalLim(tab[i-1],TIME_4,LIM_4))
-			{
-				return TRUE;	
+				if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i-3],TIME_2,LIM_3) && almostEgalLim(tab[i-2],TIME_3,LIM_3) && almostEgalLim(tab[i-1],TIME_4,LIM_4))
+				{
+					return TRUE;
+				}
+				else	
+				{
+					return FALSE;
+				}		
 			}
-			else
-			{
-				return FALSE;
-			}		
-		}else if( i == 3)
-		{
-			if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i-3],TIME_2,LIM_3) && almostEgalLim(tab[i-2],TIME_3,LIM_3) && almostEgalLim(tab[i-1],TIME_4,LIM_4))
-			{
-				return TRUE;	
-			}
-			else
-			{
-				return FALSE;
-			}		
 		}
 	}
 }
