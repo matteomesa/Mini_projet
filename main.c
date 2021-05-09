@@ -78,7 +78,7 @@ int main(void)
     /* Infinite loop. */
     while (1) 
     {
-        chprintf((BaseSequentialStream *) &SDU1,"%1.5f %1.5f %1.5f a",getRightDifPhase(),getLeftDifPhase(),getRightDifPhase()+getLeftDifPhase());
+        //chprintf((BaseSequentialStream *) &SDU1,"%1.5f %1.5f %1.5f a",getRightDifPhase(),getLeftDifPhase(),getRightDifPhase()+getLeftDifPhase());
         set_body_led(i);
         if (i == 1)
               {i = 0;}
