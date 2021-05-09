@@ -472,6 +472,8 @@ void processMean()
 
 		for(uint8_t j = 0; j<4;j++)
 		{
+			meanAmpl[i][j] = 0;
+			
 			for(uint8_t k = 0; k<10;k++)
 			{
 				meanAmpl[i][j] += lastAmpl[i][j][k];
@@ -488,16 +490,18 @@ void addNewAmpl()
 	for (uint8_t i = 0; i<4;i++)
 	{
 		if(micRight_output[FREQ_ID_1024[i]] > 7000)
-
-		lastAmpl[i][R_ID][idAmpl[i]] = micRight_output[FREQ_ID_1024[i]];
-		lastAmpl[i][L_ID][idAmpl[i]] = micLeft_output[FREQ_ID_1024[i]];
-		lastAmpl[i][F_ID][idAmpl[i]] = micFront_output[FREQ_ID_1024[i]];
-		lastAmpl[i][B_ID][idAmpl[i]] = micBack_output[FREQ_ID_1024[i]];
-
-		idAmpl[i]++;
-		if(idAmpl[i] >= 10)
 		{
-			idAmpl[i] = =;
+
+			lastAmpl[i][R_ID][idAmpl[i]] = micRight_output[FREQ_ID_1024[i]];
+			lastAmpl[i][L_ID][idAmpl[i]] = micLeft_output[FREQ_ID_1024[i]];
+			lastAmpl[i][F_ID][idAmpl[i]] = micFront_output[FREQ_ID_1024[i]];
+			lastAmpl[i][B_ID][idAmpl[i]] = micBack_output[FREQ_ID_1024[i]];
+
+			idAmpl[i]++;
+			if(idAmpl[i] >= 10)
+			{
+				idAmpl[i] = 0;
+			}
 		}
 	}
 }
@@ -598,7 +602,7 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 
 
 
-		algoPosAmpl(meanAmpl535L,meanAmpl535F,meanAmpl535R,meanAmpl535B);
+		//algoPosAmpl(meanAmpl535L,meanAmpl535F,meanAmpl535R,meanAmpl535B);
 
 
 		//chprintf((BaseSequentialStream *) &SDU1,"%f %f %f %fa",Ampl312,Ampl535,Ampl671,Ampl796);
