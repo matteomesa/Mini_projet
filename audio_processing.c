@@ -127,7 +127,7 @@ float phase(float rea, float im)
 float getPhase(float* FFTresult, float freq)
 {
 	uint16_t index = ceil(freq/15.625);
-	return phase(FFTresult[2*index],FFTresult[2*index+1]);
+	return atan2(FFTresult[2*index],FFTresult[2*index+1]);
 	
 }
 
