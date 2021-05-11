@@ -107,6 +107,8 @@ static float lastdifPhase[NB_MEAN];
 #define B_ID            2
 #define F_ID            3
 
+#define RANGE_TIME		6100
+
 
 
 
@@ -116,6 +118,25 @@ static float lastdifPhase[NB_MEAN];
 *	and to execute a motor command depending on it
 */
 
+bool checkTime (float time, float timeRef)
+{
+	if((time - timeRef) < 100)
+	{
+		return TRUE;
+	}
+	else if(((time+RANGE_TIME) - timeRef) < 100)
+	{
+		return TRUE;
+	}
+	else if((((time-RANGE_TIME) - timeRef) < 100))
+	{
+		return TRUE;
+	}
+	else
+	{
+		return FALSE;
+	}
+}
 
 bool almostEgalLim(float a,float b,float lim)
 {
