@@ -50,14 +50,14 @@ static bool indexPick;
 
 
 //Test degueu
-static float lastAmplR[15];
-static float lastAmplL[15];
-static float lastAmplF[15];
-static float lastAmplB[15];
+static float lastAmplR[NB_MEAN];
+static float lastAmplL[NB_MEAN];
+static float lastAmplF[NB_MEAN];
+static float lastAmplB[NB_MEAN];
 
 
 //tableau des dernière amplitudes (3 freq / 4 mic / 10 donnée)
-static float lastAmpl[4][4][15];
+static float lastAmpl[4][4][NB_MEAN];
 
 //moyenne des dernières mesures des mic
 static float meanAmpl[4][4];
@@ -68,7 +68,7 @@ static uint8_t FREQ_ID_1024[4]={34,43,51,20};
 
 
 
-static float lastdifPhase[15];
+static float lastdifPhase[NB_MEAN];
 
 
 
@@ -101,6 +101,8 @@ static float lastdifPhase[15];
 #define L_ID            1
 #define B_ID            2
 #define F_ID            3
+
+
 
 
 
@@ -223,7 +225,7 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 {
 	if((amplL-amplR) > 0 && (amplF-amplB) > 0 && (amplL-amplF) < 0)
 	{
-		chprintf((BaseSequentialStream *) &SDU1,"Gauche 0-45, ratio = %1.4f \n",(amplL-amplR)/(amplF-amplR));
+		//chprintf((BaseSequentialStream *) &SDU1,"Gauche 0-45, ratio = %1.4f \n",(amplL-amplR)/(amplF-amplR));
 
 		if((amplL-amplR)/(amplF-amplR)>0.4)
 		{
@@ -242,13 +244,13 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 	if((amplL-amplR) > 0 && (amplF-amplB) > 0 && (amplL-amplF) > 0)
 	{
 		//rotation vers la gauche vitesse 2
-		chprintf((BaseSequentialStream *) &SDU1,"Gauche 45-90 \n");
+		//chprintf((BaseSequentialStream *) &SDU1,"Gauche 45-90 \n");
 		left_motor_set_speed(-200);
 		right_motor_set_speed(200);
 	}
 	if((amplL-amplR) < 0 && (amplF-amplB) > 0 && (amplF-amplR) > 0)
 	{
-		chprintf((BaseSequentialStream *) &SDU1,"Droite 0-45, ratio = %1.4f \n",(amplL-amplR)/(amplL-amplF));
+		//chprintf((BaseSequentialStream *) &SDU1,"Droite 0-45, ratio = %1.4f \n",(amplL-amplR)/(amplL-amplF));
 
 		if((amplL-amplR)/(amplF-amplL)>0.4)
 		{
@@ -265,35 +267,35 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 	if((amplL-amplR) < 0 && (amplF-amplB) > 0 && (amplF-amplR) < 0)
 	{
 		//rotation vers la droite vitesse 2
-		chprintf((BaseSequentialStream *) &SDU1,"Droite 45-90 \n");
+		//chprintf((BaseSequentialStream *) &SDU1,"Droite 45-90 \n");
 		left_motor_set_speed(200);
 		right_motor_set_speed(-200);
 	}
 	if((amplL-amplR) < 0 && (amplF-amplB) < 0 && (amplR-amplB) > 0)
 	{
 		// rotation vers la droite vitesse 3 ou quart de tour vers la droite + rotation vers la droite vitesse 1
-		chprintf((BaseSequentialStream *) &SDU1,"Droite 90-135 \n");
+		//chprintf((BaseSequentialStream *) &SDU1,"Droite 90-135 \n");
 		left_motor_set_speed(200);
 		right_motor_set_speed(-200);
 	}
 	if((amplL-amplR) < 0 && (amplF-amplB) < 0 && (amplR-amplB) < 0)
 	{
 		// rotation vers la droite vitesse 4 ou quart de tour vers la droite + rotation vers la droite vitesse 2
-		chprintf((BaseSequentialStream *) &SDU1,"Droite 135-180 \n");
+		//chprintf((BaseSequentialStream *) &SDU1,"Droite 135-180 \n");
 		left_motor_set_speed(200);
 		right_motor_set_speed(-200);
 	}
 	if((amplL-amplR) > 0 && (amplF-amplB) < 0 && (amplB-amplL) > 0)
 	{
 		// rotation vers la gauche vitesse 3 ou quart de tour vers la gauche + rotation vers la gauche vitesse 1
-		chprintf((BaseSequentialStream *) &SDU1,"Gauche 90-135 \n");
+		//chprintf((BaseSequentialStream *) &SDU1,"Gauche 90-135 \n");
 		left_motor_set_speed(-200);
 		right_motor_set_speed(200);
 	}
 	if((amplL-amplR) > 0 && (amplF-amplB) < 0 && (amplB-amplL) < 0)
 	{
 		// rotation vers la gauche vitesse 4 ou quart de tour vers la gauche + rotation vers la gauche vitesse 2
-		chprintf((BaseSequentialStream *) &SDU1,"Gauche 135-180 \n");
+		//chprintf((BaseSequentialStream *) &SDU1,"Gauche 135-180 \n");
 		left_motor_set_speed(-200);
 		right_motor_set_speed(200);
 
@@ -511,12 +513,12 @@ void processMean()
 		{
 			meanAmpl[i][j] = 0;
 			
-			for(uint8_t k = 0; k<15;k++)
+			for(uint8_t k = 0; k<NB_MEAN;k++)
 			{
 				meanAmpl[i][j] += lastAmpl[i][j][k];
 
 			}
-			meanAmpl[i][j] = meanAmpl[i][j]/15;
+			meanAmpl[i][j] = meanAmpl[i][j]/NB_MEAN;
 		}
 
 	}
@@ -535,7 +537,7 @@ void addNewAmpl()
 			lastAmpl[i][B_ID][idAmpl[i]] = micBack_output[FREQ_ID_1024[i]];
 
 			idAmpl[i]++;
-			if(idAmpl[i] >= 15)
+			if(idAmpl[i] >= NB_MEAN)
 			{
 				idAmpl[i] = 0;
 			}
