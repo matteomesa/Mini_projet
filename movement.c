@@ -6,8 +6,10 @@
 
 static float dist; 
 
-#define MAX_SUM_ERROR 100
-
+#define MAX_SUM_ERROR		100
+#define ERROR_THRESHOLD		100
+#define KP 					1
+#define KI					1
 
 int16_t pi_regulator(float distance, float goal){
 
@@ -37,4 +39,17 @@ int16_t pi_regulator(float distance, float goal){
 	speed = KP * error + KI * sum_error;
 
     return (int16_t)speed;
+}
+
+void movement()
+{
+	//detection musique
+
+		//detection de position
+
+		//detection de dist
+
+		// PI de la distance 
+
+		//mouvement
 }
