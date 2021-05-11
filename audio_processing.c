@@ -109,7 +109,7 @@ static float lastdifPhase[NB_MEAN];
 
 #define RANGE_TIME		6100
 
-
+#define LIM_TIME		100
 
 
 
@@ -120,15 +120,15 @@ static float lastdifPhase[NB_MEAN];
 
 bool checkTime (float time, float timeRef)
 {
-	if((time - timeRef) < 100)
+	if((time - timeRef) < LIM_TIME)
 	{
 		return TRUE;
 	}
-	else if(((time+RANGE_TIME) - timeRef) < 100)
+	else if(((time+RANGE_TIME) - timeRef) < LIM_TIME)
 	{
 		return TRUE;
 	}
-	else if((((time-RANGE_TIME) - timeRef) < 100))
+	else if((((time-RANGE_TIME) - timeRef) < LIM_TIME))
 	{
 		return TRUE;
 	}
