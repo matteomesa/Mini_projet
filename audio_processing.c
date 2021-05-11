@@ -64,7 +64,10 @@ static float meanAmpl[4][4];
 
 static uint8_t idAmpl[4];
 
-static uint8_t FREQ_ID_1024[4]={34,43,51,20};
+static const uint8_t FREQ_ID_1024[4]={34,43,51,20};
+
+static uint16_t leftRotationSpeed;
+static uint16_t RightRotationSpeed;
 
 
 
@@ -80,14 +83,16 @@ static float lastdifPhase[NB_MEAN];
 #define FREQ_3			796 //third frequence to detect sound
 #define FREQ_4          312 //4ème fre
 
-#define FREQ_1_id		1
-#define FREQ_2_id		2
-#define FREQ_3_id		3
-#define FREQ_4_id		4
+#define FREQ_1_id		0
+#define FREQ_2_id		1
+#define FREQ_3_id		2
+#define FREQ_4_id		3
+
+#define ROTATION_SPEED	300
 
 
 
-#define NOISE 			10000
+#define NOISE 			5000
 #define TIME_1			1
 #define TIME_2			1
 #define TIME_3			1
@@ -114,7 +119,7 @@ static float lastdifPhase[NB_MEAN];
 
 bool almostEgalLim(float a,float b,float lim)
 {
-	if(abs(a-b)<lim)
+	if((a-b)*(a-b)<lim*lim)
 		return TRUE;
 	else
 		return FALSE;
@@ -200,12 +205,12 @@ void detect_pick(uint8_t id, float ampl)
 		float time = GPTD12.tim->CNT;
 		if((ampl > 4*tabPick[0+2*id])&&(time>7000))
 		{
-			//chprintf((BaseSequentialStream *) &SDU1,"pic detect, id = %d",id);
+			chprintf((BaseSequentialStream *) &SDU1,"pic detect, id = %d",id);
 			tabTime[index_tab] = time;
 			GPTD12.tim->CNT = 0;
 			
 			
-			//chprintf((BaseSequentialStream *) &SDU1," time = %f \n",time);
+			chprintf((BaseSequentialStream *) &SDU1," time = %f \n",time);
 			if(index_tab == 3)
 			{
 				index_tab = 0;
@@ -229,8 +234,8 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 
 		if((amplL-amplR)/(amplF-amplR)>0.4)
 		{
-			left_motor_set_speed(-200);
-			right_motor_set_speed(200);
+			left_motor_set_speed(-ROTATION_SPEED);
+			right_motor_set_speed(ROTATION_SPEED);
 		}
 		else
 		{
@@ -245,8 +250,8 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 	{
 		//rotation vers la gauche vitesse 2
 		//chprintf((BaseSequentialStream *) &SDU1,"Gauche 45-90 \n");
-		left_motor_set_speed(-200);
-		right_motor_set_speed(200);
+		left_motor_set_speed(-ROTATION_SPEED);
+		right_motor_set_speed(ROTATION_SPEED);
 	}
 	if((amplL-amplR) < 0 && (amplF-amplB) > 0 && (amplF-amplR) > 0)
 	{
@@ -254,8 +259,8 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 
 		if((amplL-amplR)/(amplF-amplL)>0.4)
 		{
-			left_motor_set_speed(200);
-			right_motor_set_speed(-200);
+			left_motor_set_speed(ROTATION_SPEED);
+			right_motor_set_speed(-ROTATION_SPEED);
 		}
 		else
 		{
@@ -268,36 +273,36 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 	{
 		//rotation vers la droite vitesse 2
 		//chprintf((BaseSequentialStream *) &SDU1,"Droite 45-90 \n");
-		left_motor_set_speed(200);
-		right_motor_set_speed(-200);
+		left_motor_set_speed(ROTATION_SPEED);
+		right_motor_set_speed(-ROTATION_SPEED);
 	}
 	if((amplL-amplR) < 0 && (amplF-amplB) < 0 && (amplR-amplB) > 0)
 	{
 		// rotation vers la droite vitesse 3 ou quart de tour vers la droite + rotation vers la droite vitesse 1
 		//chprintf((BaseSequentialStream *) &SDU1,"Droite 90-135 \n");
-		left_motor_set_speed(200);
-		right_motor_set_speed(-200);
+		left_motor_set_speed(ROTATION_SPEED);
+		right_motor_set_speed(-ROTATION_SPEED);
 	}
 	if((amplL-amplR) < 0 && (amplF-amplB) < 0 && (amplR-amplB) < 0)
 	{
 		// rotation vers la droite vitesse 4 ou quart de tour vers la droite + rotation vers la droite vitesse 2
 		//chprintf((BaseSequentialStream *) &SDU1,"Droite 135-180 \n");
-		left_motor_set_speed(200);
-		right_motor_set_speed(-200);
+		left_motor_set_speed(ROTATION_SPEED);
+		right_motor_set_speed(-ROTATION_SPEED);
 	}
 	if((amplL-amplR) > 0 && (amplF-amplB) < 0 && (amplB-amplL) > 0)
 	{
 		// rotation vers la gauche vitesse 3 ou quart de tour vers la gauche + rotation vers la gauche vitesse 1
 		//chprintf((BaseSequentialStream *) &SDU1,"Gauche 90-135 \n");
-		left_motor_set_speed(-200);
-		right_motor_set_speed(200);
+		left_motor_set_speed(-ROTATION_SPEED);
+		right_motor_set_speed(ROTATION_SPEED);
 	}
 	if((amplL-amplR) > 0 && (amplF-amplB) < 0 && (amplB-amplL) < 0)
 	{
 		// rotation vers la gauche vitesse 4 ou quart de tour vers la gauche + rotation vers la gauche vitesse 2
 		//chprintf((BaseSequentialStream *) &SDU1,"Gauche 135-180 \n");
-		left_motor_set_speed(-200);
-		right_motor_set_speed(200);
+		left_motor_set_speed(-ROTATION_SPEED);
+		right_motor_set_speed(ROTATION_SPEED);
 
 	}
 
@@ -655,7 +660,8 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 			}
 		}
 
-		algoPosAmpl(maxAmplLeft,maxAmplFront,maxAmplRight,maxAmplBack);
+
+		//algoPosAmpl(maxAmplLeft,maxAmplFront,maxAmplRight,maxAmplBack);
 
 
 		float ALmR = maxAmplLeft-maxAmplRight;
@@ -664,6 +670,18 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		float ratio = (ALmR/AFmR);
 
 		//chprintf((BaseSequentialStream *) &SDU1,"%f %f %fa",ALmR,AFmR,ratio);
+
+
+		detect_pick(FREQ_1_id, micRight_output[FREQ_ID_1024[FREQ_1_id]]);
+		detect_pick(FREQ_2_id, micRight_output[FREQ_ID_1024[FREQ_2_id]]);
+		detect_pick(FREQ_3_id, micRight_output[FREQ_ID_1024[FREQ_3_id]]);
+
+//		detect_pick(0, Ampl535);
+//		detect_pick(1, Ampl671);
+//		detect_pick(2, Ampl796);
+
+
+
 
 
 
