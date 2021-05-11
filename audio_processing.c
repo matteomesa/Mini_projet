@@ -24,28 +24,22 @@ static float micBack_cmplx_input[2 * FFT_SIZE];
 static float micLeft_output[FFT_SIZE];
 static float micRight_output[FFT_SIZE];
 static float micFront_output[FFT_SIZE];
-
 static float micBack_output[FFT_SIZE];
 
 static uint8_t tabFreq[4];
 static uint16_t tabTime[4];
+
 static float tabPick[6];
 
 //Static float 
-static float old_phase_diff;
-static float OldFreq;
+
 
 //Static int
-static uint8_t nbFail;
-static uint8_t counter;
 static uint8_t index_tab;
-
-static float rightDifPhase;
-static float leftDifPhase;
 
 
 //Static bool
-static bool chrono;
+
 static bool indexPick;
 static bool muique;
 
@@ -96,15 +90,7 @@ static bool muique;
 
 
 #define NOISE 			5000
-#define TIME_1			1
-#define TIME_2			1
-#define TIME_3			1
-#define TIME_4			1
 
-#define LIM_1			1
-#define LIM_2			1
-#define LIM_3			1
-#define LIM_4			1
 #define R_ID            0
 #define L_ID            1
 #define B_ID            2
@@ -147,79 +133,6 @@ bool almostEgalLim(float a,float b,float lim)
 		return TRUE;
 	else
 		return FALSE;
-}
-float phase(float rea, float im)
-{
-	return atan2(im,rea);
-}
-
-float getPhase(float* FFTresult, float freq)
-{
-	uint16_t index = ceil(freq/15.625);
-	return atan2(FFTresult[2*index],FFTresult[2*index+1]);
-	
-}
-
-float getPhaseMax(float* data,float* FFTresult)
-{
-	float max_norm = 0;
-	float phase_max = 0;
-	uint16_t max_index = 0;
-
-
-	for (uint16_t i=MIN_FREQ; i < MAX_FREQ; i++)
-	{
-		if(data[i]>max_norm)
-		{
-			max_norm = data[i];
-			max_index = i;
-		}
-	}
-
-	//chprintf((BaseSequentialStream *) &SDU1, " indice phase = %d \n ",max_index);
-	return phase(FFTresult[2*max_index],FFTresult[2*max_index+1]);
-
-}
-
-float getFreqMax(float* data)
-{
-	float max_norm = 0;
-	uint16_t max_index = 0;
-
-	for (uint16_t i=MIN_FREQ; i < MAX_FREQ; i++)
-	{
-		if(data[i]>max_norm)
-		{
-			max_norm = data[i];
-			max_index = i;
-		}
-	}
-	//chprintf((BaseSequentialStream *) &SDU1, " indice freq = %d \n ",max_index);
-
-	return max_index * 15.625;
-}
-
-float getAmplMax(float* data)
-{
-	float max_norm = 0;
-	uint16_t max_index = 0;
-
-	for (uint16_t i=MIN_FREQ; i < MAX_FREQ; i++)
-	{
-		if(data[i]>max_norm)
-		{
-			max_norm = data[i];
-			max_index = i;
-		}
-	}
-	return data[max_index];
-}
-
-float diff_phase(float new_diff_phase)
-{
-	float temp_phase = (ALPHA*new_diff_phase + (1-ALPHA)*old_phase_diff);
-	//old_phase_diff = temp_phase;
-	return temp_phase;
 }
 
 void detect_pick(uint8_t id, float ampl)
@@ -392,10 +305,6 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 }
 
 
-
-
-
-
 /*
 *	Callback called when the demodulation of the four microphones is done.
 *	We get 160 samples per mic every 10ms (16kHz)
@@ -447,15 +356,6 @@ void addNewAmpl()
 		}
 	}
 }
-
-
-
-float getRightDifPhase()
-{return rightDifPhase;}
-
-float getLeftDifPhase()
-{return leftDifPhase;}
-
 
 
 void processAudioData(int16_t *data, uint16_t num_samples){
@@ -518,27 +418,6 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		arm_cmplx_mag_f32(micFront_cmplx_input, micFront_output, FFT_SIZE);
 		arm_cmplx_mag_f32(micBack_cmplx_input, micBack_output, FFT_SIZE);
 
-
-		float phaseRight = getPhaseMax(micRight_output,micRight_cmplx_input);
-		float phaseLeft = getPhaseMax(micLeft_output,micLeft_cmplx_input);
-
-		float difPhase =  diff_phase(phaseRight - phaseLeft);
-		old_phase_diff = difPhase;
-		float freqMax = getFreqMax(micRight_output);
-		float amplMax = getAmplMax(micRight_output);
-
-		float phaseRight535 = phase(micRight_output[2*34],micRight_output[2*34+1]);
-		float phaseLeft535 = phase(micLeft_output[2*34],micLeft_output[2*34+1]);
-
-		float difPhase535 = phaseRight535-phaseLeft535;
-
-
-
-		float Ampl312 = micRight_output[20];
-		float Ampl535 = micRight_output[34];
-		float Ampl671 = micRight_output[43];
-		float Ampl796 = micRight_output[51];
-
 		processMean();
 		addNewAmpl();
 
@@ -567,118 +446,9 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 
 		float ratio = (ALmR/AFmR);
 
-		//chprintf((BaseSequentialStream *) &SDU1,"%f %f %fa",ALmR,AFmR,ratio);
-
-
 		detect_pick(FREQ_1_id, micRight_output[FREQ_ID_1024[FREQ_1_id]]);
 		detect_pick(FREQ_2_id, micRight_output[FREQ_ID_1024[FREQ_2_id]]);
 		detect_pick(FREQ_3_id, micRight_output[FREQ_ID_1024[FREQ_3_id]]);
-
-//		detect_pick(0, Ampl535);
-//		detect_pick(1, Ampl671);
-//		detect_pick(2, Ampl796);
-
-
-
-
-
-
-
-		//algoPosAmpl(meanAmpl535L,meanAmpl535F,meanAmpl535R,meanAmpl535B);
-
-
-		//chprintf((BaseSequentialStream *) &SDU1,"%f %f %f %fa",Ampl312,Ampl535,Ampl671,Ampl796);
-
-
-//		float difAmpl535RL = Ampl535R - Ampl535L;
-//		float difAmpl535FB = Ampl535F - Ampl535B;
-//
-//
-//		float difAmpl535 = Ampl535 - Ampl535L;
-//
-//		//chprintf((BaseSequentialStream *) &SDU1,"%fa",difPhase);
-//
-//		if (((abs(difPhase)*100>300)||(amplMax<10000))&&(idAmpl!=0))
-//		{
-//			lastdifPhase[idAmpl] = lastdifPhase[idAmpl-1];
-//
-//		}
-//		if (((abs(difPhase)*100>70)||(amplMax<10000))&&(idAmpl==0))
-//		{
-//			lastdifPhase[idAmpl] = lastdifPhase[idAmpl+9];
-//
-//		}
-//
-//
-//		lastAmplRL[idAmpl] = difAmpl535RL;
-//		lastAmplFB[idAmpl] = difAmpl535FB;
-//		lastdifPhase[idAmpl]=difPhase;
-//
-//		float meanDifPhase = 0;
-//		for (uint8_t i = 0;i<10;i++)
-//		{
-//			meanDifPhase += lastdifPhase[i];
-//
-//		}
-//			meanDifPhase = meanDifPhase/10;
-//			//chprintf((BaseSequentialStream *) &SDU1,"%fa",meanDifPhase*100);
-//
-//		idAmpl++;
-//		if (idAmpl ==10)
-//		{
-//			float meanAmplRL = 0;
-//			float meanAmplFB = 0;
-//			for (uint8_t i = 0;i<10;i++)
-//			{
-//				meanAmplRL += lastAmplRL[i];
-//				meanAmplFB += lastAmplFB[i];
-//
-//			}
-//			meanAmplRL = meanAmplRL/10;
-//			meanAmplFB = meanAmplFB/10;
-//			//chprintf((BaseSequentialStream *) &SDU1," dif Ampl = %f \n",meanAmpl);
-//			idAmpl = 0;
-//
-//		}
-//
-//
-//
-//
-//		detect_pick(0, Ampl535);
-//		detect_pick(1, Ampl671);
-//		detect_pick(2, Ampl796);
-//
-//		rightDifPhase = diff_phase(phaseRight - phaseLeft);
-//		leftDifPhase = diff_phase(phaseLeft - phaseRight);
-//
-//
-//
-//		float diffPhase535 = phase(micRight_cmplx_input[2*34],micRight_cmplx_input[2*34+1])*100;
-//
-//		float diffPhase671 = phase(micRight_cmplx_input[2*43],micRight_cmplx_input[2*43+1])*100;
-//
-//		float diffPhase796 = phase(micRight_cmplx_input[2*51],micRight_cmplx_input[2*51+1])*100;
-//		float tempDiff = 0;
-//		float diffPhase =  (diffPhase535 + diffPhase671 + diffPhase796)*0.33;
-//		//chprintf((BaseSequentialStream *) &SDU1,"%1.1f %1.1f %1.1f %1.1fa", diffPhase535, diffPhase671, diffPhase796,diffPhase );
-//		if(Ampl535 > 10000 || Ampl671 > 10000 || Ampl796 > 10000)
-//		{
-//			float diffPhase =  (diffPhase535 + diffPhase671 + diffPhase796)*0.33;
-//		//	chprintf((BaseSequentialStream *) &SDU1, " %1.1fa", diffPhase);
-//			tempDiff = diffPhase;
-//		}
-//		else
-//		{
-//
-//		//	chprintf((BaseSequentialStream *) &SDU1, " %1.1fa", tempDiff);
-//		}
-//
-//
-//		if((Ampl535 > 10000)&&(abs(difPhase535)<1))
-//		{
-//			chprintf((BaseSequentialStream *) &SDU1, "%f %fa", difPhase535,Ampl535);
-//
-//		}
 
 		nb_samples = 0;
 		mustSend++;
