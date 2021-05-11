@@ -27,7 +27,7 @@ static float micFront_output[FFT_SIZE];
 
 static float micBack_output[FFT_SIZE];
 
-static float tabFreq[4];
+static uint8_t tabFreq[4];
 static uint16_t tabTime[4];
 static float tabPick[6];
 
@@ -47,6 +47,7 @@ static float leftDifPhase;
 //Static bool
 static bool chrono;
 static bool indexPick;
+static bool muique;
 
 
 //Test degueu
@@ -72,6 +73,8 @@ static uint16_t RightRotationSpeed;
 
 
 static float lastdifPhase[NB_MEAN];
+
+static bool muique;
 
 
 
@@ -228,6 +231,7 @@ void detect_pick(uint8_t id, float ampl)
 		{
 			chprintf((BaseSequentialStream *) &SDU1,"pic detect, id = %d",id);
 			tabTime[index_tab] = time;
+			tabFreq[index_tab] = id;
 			GPTD12.tim->CNT = 0;
 			
 			
@@ -247,6 +251,64 @@ void detect_pick(uint8_t id, float ampl)
 		tabPick[1+2*id] = ampl;
 	}
 }
+
+
+void detectMusique()
+
+{
+	uint16_t tabTime2[8];
+	uint8_t tabFreq2[8];
+
+	for (uint8_t i=0;i<4;i++)
+	{
+		tabTime2[i] = tabTime[i];
+		tabFreq2[i] = tabFreq[i];
+	}
+	for (uint8_t i=0;i<4;i++)
+	{
+		tabTime2[4+i] = tabTime[i];
+		tabFreq2[4+i] = tabFreq[i];
+	}
+
+	musique = false;
+
+	//comparaison tableau
+
+	for(uint8_t i = 0; i<4;i++)
+	{
+		if( (tabFreq2[i]==tabFreqRef[0]) && (tabTime2[i]==tabTimeRef[0]) )
+		{
+			for(uint8_t j = 0; j<3;j++)
+			{
+				if( (tabFreq2[i+j]==tabFreqRef[j]) && (tabTime2[i+j]==tabTimeRef[j]) )
+				{
+					if(j==3)
+					{
+						musique = true;
+					}
+				}
+				else
+				{
+					break;
+				}
+
+			}
+		}
+
+	}
+
+
+}
+
+
+boucle 1
+1   boucle     2 3 4
+2	boucle     3 4 5
+3	boucle     4 5 6
+4	boucle     5 6 7 
+
+
+
 void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 {
 	if((amplL-amplR) > 0 && (amplF-amplB) > 0 && (amplL-amplF) < 0)
@@ -328,61 +390,11 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 	}
 
 }
-bool check_tab( uint16_t tab[4])
-{
-	
-	for(uint8_t i = 0; i < 4 ;i++)
-	{
-		bool checkTab;
-		switch(i)
-		{
-			case 0:
-			{
-				if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i+1],TIME_2,LIM_3) && almostEgalLim(tab[i+2],TIME_3,LIM_3) && almostEgalLim(tab[i+2],TIME_4,LIM_4))
-				{
-					return TRUE;
-				}
-				else 
-				{
-					break;
-				}
-			}
-			case 1:
-			{
-				if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i+1],TIME_2,LIM_3) && almostEgalLim(tab[i+2],TIME_3,LIM_3) && almostEgalLim(tab[i-1],TIME_4,LIM_4))
-				{
-					return TRUE;
-				}
-				else
-				{
-					break;
-				}		
-			}
-			case 2:
-			{
-				if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i+1],TIME_2,LIM_3) && almostEgalLim(tab[i-2],TIME_3,LIM_3) && almostEgalLim(tab[i-1],TIME_4,LIM_4))
-				{
-					return TRUE;
-				}
-				else
-				{
-					break;
-				}		
-			}
-			case 3:
-			{
-				if(almostEgalLim(tab[i],TIME_1,LIM_1) && almostEgalLim(tab[i-3],TIME_2,LIM_3) && almostEgalLim(tab[i-2],TIME_3,LIM_3) && almostEgalLim(tab[i-1],TIME_4,LIM_4))
-				{
-					return TRUE;
-				}
-				else	
-				{
-					return FALSE;
-				}		
-			}
-		}
-	}
-}
+
+
+
+
+
 
 /*
 *	Callback called when the demodulation of the four microphones is done.
