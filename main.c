@@ -79,10 +79,7 @@ int main(void)
     while (1) 
     {
         //chprintf((BaseSequentialStream *) &SDU1,"%1.5f %1.5f %1.5f a",getRightDifPhase(),getLeftDifPhase(),getRightDifPhase()+getLeftDifPhase());
-        set_body_led(i);
-        if (i == 1)
-              {i = 0;}
-        else{i = 1;}
+       
     	//uint16_t dist = VL53L0X_get_dist_mm();
     	//chprintf((BaseSequentialStream *) &SDU1, " dist = %d \n ",dist);
 
