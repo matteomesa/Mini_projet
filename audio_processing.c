@@ -106,6 +106,8 @@ static bool musique;
 
 #define LIM_TIME		200
 
+#define RATIO_ROT	0.4
+
 
 
 /*
@@ -247,7 +249,7 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 	{
 		//chprintf((BaseSequentialStream *) &SDU1,"Gauche 0-45, ratio = %1.4f \n",(amplL-amplR)/(amplF-amplR));
 
-		if((amplL-amplR)/(amplF-amplR)>0.4)
+		if((amplL-amplR)/(amplF-amplR)>RATIO_ROT)
 		{
 			leftRotationSpeed  = -ROTATION_SPEED;
 			rightRotationSpeed =  ROTATION_SPEED;
@@ -268,7 +270,7 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 	{
 		//chprintf((BaseSequentialStream *) &SDU1,"Droite 0-45, ratio = %1.4f \n",(amplL-amplR)/(amplL-amplF));
 
-		if((amplL-amplR)/(amplL-amplF)>0.4)
+		if((amplL-amplR)/(amplF-amplL)>RATIO_ROT)
 		{
 			leftRotationSpeed  =  ROTATION_SPEED;
 			rightRotationSpeed = -ROTATION_SPEED;
@@ -367,11 +369,6 @@ void addNewAmpl()
 
 void updateMaxAmp()
 {
-	tabMaxAmpl[0] = 0;
-	tabMaxAmpl[1] = 0;
-	tabMaxAmpl[2] = 0;
-	tabMaxAmpl[3] = 0;
-	
 	for (uint8_t i =0; i<4;i++)
 		{
 			if(tabMaxAmpl[0] < meanAmpl[i][R_ID])
@@ -383,6 +380,7 @@ void updateMaxAmp()
 			}
 		}
 }
+
 void processAudioData(int16_t *data, uint16_t num_samples){
 
 	/*
