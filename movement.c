@@ -18,7 +18,7 @@ static float dist;
 
 
 
-int16_t pi_regulator(uint16_t distance)
+int16_t regulator(uint16_t distance)
 {
 	
 	if(distance > MAX_ERROR || distance < TARGET)
@@ -41,8 +41,9 @@ void movement()
 
 	if(isStraight()&&(getStraightCount()> 7 ))
 	{
-		left_motor_set_speed(300);
-		right_motor_set_speed(300);
+		uint16_t speed = regulator(VL53L0X_get_dist_mm());
+		left_motor_set_speed(speed);
+		right_motor_set_speed(speed);
 		chprintf((BaseSequentialStream *) &SDU1,"distance en mm: %d \n",VL53L0X_get_dist_mm());
 	}
 	else
