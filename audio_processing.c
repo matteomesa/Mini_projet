@@ -249,6 +249,7 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 	{
 		//chprintf((BaseSequentialStream *) &SDU1,"Gauche 0-45, ratio = %1.4f \n",(amplL-amplR)/(amplF-amplR));
 
+		if((amplL-amplR)/(amplF-amplL)>RATIO_ROT)
 		{
 			leftRotationSpeed  = -ROTATION_SPEED;
 			rightRotationSpeed =  ROTATION_SPEED;
