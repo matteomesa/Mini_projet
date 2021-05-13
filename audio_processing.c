@@ -36,6 +36,7 @@ static float tabPick[6];
 
 //Static int
 static uint8_t index_tab;
+static uint16_t coutnerLastPick;
 
 
 //Static bool
@@ -186,8 +187,8 @@ void detect_pick(uint8_t id, float ampl)
 		float time = GPTD12.tim->CNT;
 		if((ampl > 4*tabPick[0+2*id])&&(time>7000))
 		{
-			
-			//chprintf((BaseSequentialStream *) &SDU1,"pic detect, id = %d",id);
+			chprintf((BaseSequentialStream *) &SDU1,"pic detect, coutnerLastPick = %d",coutnerLastPick);
+			coutnerLastPick = 0;
 			tabTime[index_tab] = time;
 			tabFreq[index_tab] = id;
 			GPTD12.tim->CNT = 0;
@@ -267,7 +268,7 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 {
 	if((amplL-amplR) > 0 && (amplF-amplB) > 0 && (amplL-amplF) < 0)
 	{
-		chprintf((BaseSequentialStream *) &SDU1,"Gauche 0-45, ratio = %1.4f \n",(amplL-amplR)/(amplF-amplR));
+		//chprintf((BaseSequentialStream *) &SDU1,"Gauche 0-45, ratio = %1.4f \n",(amplL-amplR)/(amplF-amplR));
 
 		if((amplL-amplR)/(amplF-amplL)>RATIO_ROT)
 		{
@@ -290,7 +291,7 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 	}
 	if((amplL-amplR) > 0 && (amplF-amplB) > 0 && (amplL-amplF) > 0)
 	{
-		chprintf((BaseSequentialStream *) &SDU1,"Gauche 45-90 \n");
+		//chprintf((BaseSequentialStream *) &SDU1,"Gauche 45-90 \n");
 		leftRotationSpeed  =  ROTATION_SPEED;
 		rightRotationSpeed = -ROTATION_SPEED;
 
@@ -300,7 +301,7 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 	}
 	if((amplL-amplR) < 0 && (amplF-amplB) > 0 && (amplF-amplR) > 0)
 	{
-		chprintf((BaseSequentialStream *) &SDU1,"Droite 0-45, ratio = %1.4f \n",(amplL-amplR)/(amplL-amplF));
+		//chprintf((BaseSequentialStream *) &SDU1,"Droite 0-45, ratio = %1.4f \n",(amplL-amplR)/(amplL-amplF));
 
 		if((amplL-amplR)/(amplL-amplF)>RATIO_ROT)
 		{
@@ -323,7 +324,7 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 	}
 	if((amplL-amplR) < 0 && (amplF-amplB) > 0 && (amplF-amplR) < 0)
 	{
-		chprintf((BaseSequentialStream *) &SDU1,"Droite 45-90 \n");
+		//chprintf((BaseSequentialStream *) &SDU1,"Droite 45-90 \n");
 		leftRotationSpeed  =  -ROTATION_SPEED;
 		rightRotationSpeed = ROTATION_SPEED;
 
@@ -333,7 +334,7 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 	}
 	if((amplL-amplR) < 0 && (amplF-amplB) < 0 && (amplR-amplB) > 0)
 	{
-		chprintf((BaseSequentialStream *) &SDU1,"Droite 90-135 \n");
+	//	chprintf((BaseSequentialStream *) &SDU1,"Droite 90-135 \n");
 		leftRotationSpeed  =  -ROTATION_SPEED;
 		rightRotationSpeed = ROTATION_SPEED;
 
@@ -343,7 +344,7 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 	}
 	if((amplL-amplR) < 0 && (amplF-amplB) < 0 && (amplR-amplB) < 0)
 	{
-		chprintf((BaseSequentialStream *) &SDU1,"Droite 135-180 \n");
+		//chprintf((BaseSequentialStream *) &SDU1,"Droite 135-180 \n");
 		leftRotationSpeed  =  -ROTATION_SPEED;
 		rightRotationSpeed = ROTATION_SPEED;
 
@@ -353,7 +354,7 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 	}
 	if((amplL-amplR) > 0 && (amplF-amplB) < 0 && (amplB-amplL) > 0)
 	{
-		chprintf((BaseSequentialStream *) &SDU1,"Gauche 90-135 \n");
+		//chprintf((BaseSequentialStream *) &SDU1,"Gauche 90-135 \n");
 		leftRotationSpeed  = ROTATION_SPEED;
 		rightRotationSpeed =  -ROTATION_SPEED;
 
@@ -363,7 +364,7 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 	}
 	if((amplL-amplR) > 0 && (amplF-amplB) < 0 && (amplB-amplL) < 0)
 	{
-		chprintf((BaseSequentialStream *) &SDU1,"Gauche 135-180 \n");
+		//chprintf((BaseSequentialStream *) &SDU1,"Gauche 135-180 \n");
 		leftRotationSpeed  = ROTATION_SPEED;
 		rightRotationSpeed =  -ROTATION_SPEED;
 
@@ -526,6 +527,10 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 
 		nb_samples = 0;
 		mustSend++;
+		if(coutnerLastPick < 65000)
+		{
+			coutnerLastPick++;
+		}
 	}
 }
 
