@@ -67,6 +67,10 @@ static const uint8_t tabFreqRef[4]={0,0,1,2};
 
 static const uint16_t tabTimeRef[4]={57248,14217,14241,14276};
 
+static const uint8_t tabFreqRef[4]={0,0,1,2};
+
+static const uint16_t tabTimeRef[4]={57248,14217,14241,14276};
+
 static uint16_t leftRotationSpeed;
 static uint16_t rightRotationSpeed;
 
@@ -232,7 +236,6 @@ void detectMusique()
 	}
 
 
-
 	if(temp_musique != musique)
 	{
 		chprintf((BaseSequentialStream *) &SDU1,"changement etat musique.   Tabfreq = ");
@@ -259,101 +262,6 @@ void detectMusique()
 
 }
 
-bool compare_tab(uint16_t tabFreq2[8], uint8_t tabTime2[8])
-{
-<<<<<<< HEAD
-	bool temp_bool = false;
-=======
-	uint16_t tabTime2[8];
-	uint8_t tabFreq2[8];
-
-	for (uint8_t i=0;i<4;i++)
-	{
-		tabTime2[i] = tabTime[i];
-		tabFreq2[i] = tabFreq[i];
-	}
-	for (uint8_t i=0;i<4;i++)
-	{
-		tabTime2[4+i] = tabTime[i];
-		tabFreq2[4+i] = tabFreq[i];
-	}
-
-	bool temp_musique = false;
-
-	//comparaison tableau
->>>>>>> origin/Arnaud
-
-	for(uint8_t i = 0; i<4;i++)
-	{
-		if( (tabFreq2[i]==tabFreqRef[0]) && (checkTime(tabTime2[i],tabTimeRef[0])) )
-		{
-			if((tabFreq2[i+1]==tabFreqRef[1]) && checkTime(tabTime2[i+1],tabTimeRef[1]) && (tabFreq2[i+2]==tabFreqRef[2]) && checkTime(tabTime2[i+2],tabTimeRef[2]) && (tabFreq2[i+3]==tabFreqRef[3]) && checkTime(tabTime2[i+3],tabTimeRef[3]))
-			{				
-				temp_bool = TRUE;
-			}
-			else
-			{
-<<<<<<< HEAD
-				temp_bool = FALSE;
-=======
-				bool error = true;
-					
-				if( (tabFreq2[i+j]==tabFreqRef[j]) && (checkTime(tabTime2[i+j],tabTimeRef[j])) )
-				{
-					if((j==3)&& error)
-					{
-						temp_musique = true;
-					}
-				}
-				else
-				{
-					error = false;
-				}
-
->>>>>>> origin/Arnaud
-			}
-		}
-	}
-<<<<<<< HEAD
-	return temp_bool;
-}
-
-void detectMusique_2()
-
-{
-	uint16_t tabTime2[8];
-	uint8_t tabFreq2[8];
-=======
-
-
-
-	if(temp_musique != musique)
-	{
-		chprintf((BaseSequentialStream *) &SDU1,"changement etat musique.   Tabfreq = ");
-
-		for(uint8_t i = 0; i<4;i++)
-		{
-			chprintf((BaseSequentialStream *) &SDU1,"%d ",tabFreq[i]);
-		}
-		chprintf((BaseSequentialStream *) &SDU1,"a \n tabTime = ");
-
-		for(uint8_t i = 0; i<4;i++)
-		{
-			chprintf((BaseSequentialStream *) &SDU1,"%d ",tabTime[i]);
-		}
-
-		chprintf((BaseSequentialStream *) &SDU1,"a \n etat temp_musique = %d, etat musique = %d\n ",temp_musique,musique);
-	}
-
-	
-
-	musique = temp_musique;
-	set_front_led(musique);
-
-
-}
-
->>>>>>> origin/Arnaud
 
 	for (uint8_t i=0;i<4;i++)
 	{
@@ -579,6 +487,17 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 //				maxAmplFront = meanAmpl[i][F_ID];
 //			}
 //		}
+
+		uint16_t time1 = 12100;
+		uint16_t time2 = 11900;
+		uint16_t time3 = 18250;
+		uint16_t time4 = 18500;
+		uint16_t timetest = 12150;
+
+		//chprintf((BaseSequentialStream *) &SDU1,"time 1 = %d, time ref = %d, check time = %d \n",time1,timetest,checkTime(time1,timetest));
+		//chprintf((BaseSequentialStream *) &SDU1,"time 2 = %d, time ref = %d, check time = %d \n",time2,timetest,checkTime(time2,timetest));
+		//chprintf((BaseSequentialStream *) &SDU1,"time 3 = %d, time ref = %d, check time = %d \n",time3,timetest,checkTime(time3,timetest));
+		//chprintf((BaseSequentialStream *) &SDU1,"time 4 = %d, time ref = %d, check time = %d \n",time4,timetest,checkTime(time4,timetest));
 
 		uint16_t time1 = 12100;
 		uint16_t time2 = 11900;
