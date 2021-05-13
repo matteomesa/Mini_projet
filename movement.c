@@ -35,13 +35,9 @@ int16_t pi_regulator(float distance, float goal){
 	sum_error += error;
 
 	//we set a maximum and a minimum for the sum to avoid an uncontrolled growth
-	if(sum_error > MAX_SUM_ERROR){
-		sum_error = MAX_SUM_ERROR;
-	}else if(sum_error < -MAX_SUM_ERROR){
-		sum_error = -MAX_SUM_ERROR;
-	}
 
-	speed = KP * error + KI * sum_error;
+
+	speed = KP * error ;
 
     return (int16_t)speed;
 }
@@ -53,8 +49,7 @@ void movement()
 	{
 		left_motor_set_speed(300);
 		right_motor_set_speed(300);
-
-
+		chprintf((BaseSequentialStream *) &SDU1,"distance en mm: %d \n",VL53L0X_get_dist_mm());
 	}
 	else
 	{
