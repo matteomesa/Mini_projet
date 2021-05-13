@@ -60,12 +60,6 @@ static float meanAmpl[4][4];
 static uint8_t idAmpl[4];
 
 static const uint8_t FREQ_ID_1024[4]={34,43,51,20};
-static const uint16_t tabFreqRef[4] = {0,0,0,0};
-static const uint16_t tabTimeRef[4] = {0,0,1,2};
-
-static const uint8_t tabFreqRef[4]={0,0,1,2};
-
-static const uint16_t tabTimeRef[4]={57248,14217,14241,14276};
 
 static const uint8_t tabFreqRef[4]={0,0,1,2};
 
@@ -130,7 +124,7 @@ uint8_t getLeftRotationSpeed()
 
 uint8_t getRightRotationSpeed()
 {
-	return RightRotationSpeed;
+	return rightRotationSpeed;
 }
 
 
@@ -189,8 +183,40 @@ void detect_pick(uint8_t id, float ampl)
 		tabPick[1+2*id] = ampl;
 	}
 }
-void detectMusique()
+bool compare_tab(uint16_t tabFreq2[8], uint8_t tabTime2[8])
+{
+	bool temp_bool = false;
+	for(uint8_t i = 0; i<4;i++)
+	{
+		if( (tabFreq2[i]==tabFreqRef[0]) && (tabTime2[i]==tabTimeRef[0]) )
+		{	
+			if((tabFreq2[i+1]==tabFreqRef[1]) && checkTime(tabTime2[i+1],tabTimeRef[1]) && (tabFreq2[i+2]==tabFreqRef[2]) && checkTime(tabTime2[i+2],tabTimeRef[2]) && (tabFreq2[i+3]==tabFreqRef[3]) && checkTime(tabTime2[i+3],tabTimeRef[3]))
+			{				
+				temp_bool = TRUE;
+			}
+			else
+			{
+				temp_bool = FALSE;
+			}
+		}
+	}
+}
+void detectMusique2()
+{
+	uint16_t tabTime2[8];
+	uint8_t tabFreq2[8];
 
+	for (uint8_t i=0;i<4;i++)
+	{
+		tabTime2[i] = tabTime[i];
+		tabFreq2[i] = tabFreq[i];
+		tabTime2[4+i] = tabTime[i];
+		tabFreq2[4+i] = tabFreq[i];
+	}
+		
+	musique = compare_tab(tabTime2,tabFreq2);
+}
+void detectMusique()
 {
 	uint16_t tabTime2[8];
 	uint8_t tabFreq2[8];
@@ -262,19 +288,6 @@ void detectMusique()
 
 }
 
-
-	for (uint8_t i=0;i<4;i++)
-	{
-		tabTime2[i] = tabTime[i];
-		tabFreq2[i] = tabFreq[i];
-		tabTime2[4+i] = tabTime[i];
-		tabFreq2[4+i] = tabFreq[i];
-	}
-		
-	musique = compare_tab(tabTime2,tabFreq2);
-}
-
-
 void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 {
 	if((amplL-amplR) > 0 && (amplF-amplB) > 0 && (amplL-amplF) < 0)
@@ -284,19 +297,19 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 		if((amplL-amplR)/(amplF-amplR)>0.4)
 		{
 			leftRotationSpeed  = -ROTATION_SPEED;
-			RightRotationSpeed =  ROTATION_SPEED;
+			rightRotationSpeed =  ROTATION_SPEED;
 		}
 		else
 		{
 			leftRotationSpeed  = 0;
-			RightRotationSpeed = 0;
+			rightRotationSpeed = 0;
 		}		
 	}
 	if((amplL-amplR) > 0 && (amplF-amplB) > 0 && (amplL-amplF) > 0)
 	{
 		//chprintf((BaseSequentialStream *) &SDU1,"Gauche 45-90 \n");
 		leftRotationSpeed  = -ROTATION_SPEED;
-		RightRotationSpeed =  ROTATION_SPEED;
+		rightRotationSpeed =  ROTATION_SPEED;
 	}
 	if((amplL-amplR) < 0 && (amplF-amplB) > 0 && (amplF-amplR) > 0)
 	{
@@ -305,43 +318,43 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 		if((amplL-amplR)/(amplF-amplL)>0.4)
 		{
 			leftRotationSpeed  =  ROTATION_SPEED;
-			RightRotationSpeed = -ROTATION_SPEED;
+			rightRotationSpeed = -ROTATION_SPEED;
 		}
 		else
 		{
 			leftRotationSpeed  = 0;
-			RightRotationSpeed = 0;
+			rightRotationSpeed = 0;
 		}
 	}
 	if((amplL-amplR) < 0 && (amplF-amplB) > 0 && (amplF-amplR) < 0)
 	{
 		//chprintf((BaseSequentialStream *) &SDU1,"Droite 45-90 \n");
 		leftRotationSpeed  =  ROTATION_SPEED;
-		RightRotationSpeed = -ROTATION_SPEED;
+		rightRotationSpeed = -ROTATION_SPEED;
 	}
 	if((amplL-amplR) < 0 && (amplF-amplB) < 0 && (amplR-amplB) > 0)
 	{
 		//chprintf((BaseSequentialStream *) &SDU1,"Droite 90-135 \n")
 		leftRotationSpeed  =  ROTATION_SPEED;
-		RightRotationSpeed = -ROTATION_SPEED;
+		rightRotationSpeed = -ROTATION_SPEED;
 	}
 	if((amplL-amplR) < 0 && (amplF-amplB) < 0 && (amplR-amplB) < 0)
 	{
 		//chprintf((BaseSequentialStream *) &SDU1,"Droite 135-180 \n");
 		leftRotationSpeed  =  ROTATION_SPEED;
-		RightRotationSpeed = -ROTATION_SPEED;
+		rightRotationSpeed = -ROTATION_SPEED;
 	}
 	if((amplL-amplR) > 0 && (amplF-amplB) < 0 && (amplB-amplL) > 0)
 	{
 		//chprintf((BaseSequentialStream *) &SDU1,"Gauche 90-135 \n");
 		leftRotationSpeed  = -ROTATION_SPEED;
-		RightRotationSpeed =  ROTATION_SPEED;
+		rightRotationSpeed =  ROTATION_SPEED;
 	}
 	if((amplL-amplR) > 0 && (amplF-amplB) < 0 && (amplB-amplL) < 0)
 	{
 		//chprintf((BaseSequentialStream *) &SDU1,"Gauche 135-180 \n");
 		leftRotationSpeed  = -ROTATION_SPEED;
-		RightRotationSpeed =  ROTATION_SPEED;
+		rightRotationSpeed =  ROTATION_SPEED;
 	}
 
 }
@@ -475,7 +488,6 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		processMean();
 		addNewAmpl();
 		float tabMaxAmpl[4] = {0};
-		updateMaxAmp(tabMaxAmpl);
 
 //		for (uint8_t i =0; i<4;i++)
 //		{
@@ -499,29 +511,13 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		//chprintf((BaseSequentialStream *) &SDU1,"time 3 = %d, time ref = %d, check time = %d \n",time3,timetest,checkTime(time3,timetest));
 		//chprintf((BaseSequentialStream *) &SDU1,"time 4 = %d, time ref = %d, check time = %d \n",time4,timetest,checkTime(time4,timetest));
 
-		uint16_t time1 = 12100;
-		uint16_t time2 = 11900;
-		uint16_t time3 = 18250;
-		uint16_t time4 = 18500;
-		uint16_t timetest = 12150;
-
-		//chprintf((BaseSequentialStream *) &SDU1,"time 1 = %d, time ref = %d, check time = %d \n",time1,timetest,checkTime(time1,timetest));
-		//chprintf((BaseSequentialStream *) &SDU1,"time 2 = %d, time ref = %d, check time = %d \n",time2,timetest,checkTime(time2,timetest));
-		//chprintf((BaseSequentialStream *) &SDU1,"time 3 = %d, time ref = %d, check time = %d \n",time3,timetest,checkTime(time3,timetest));
-		//chprintf((BaseSequentialStream *) &SDU1,"time 4 = %d, time ref = %d, check time = %d \n",time4,timetest,checkTime(time4,timetest));
 
 
 		//algoPosAmpl(maxAmplLeft,maxAmplFront,maxAmplRight,maxAmplBack);
-
-<<<<<<< HEAD
-=======
-
 		//float ALmR = maxAmplLeft-maxAmplRight;
 		//float AFmR = maxAmplFront-maxAmplRight;
 
 		//float ratio = (ALmR/AFmR);
-
->>>>>>> origin/Arnaud
 		detect_pick(FREQ_1_id, micRight_output[FREQ_ID_1024[FREQ_1_id]]);
 		detect_pick(FREQ_2_id, micRight_output[FREQ_ID_1024[FREQ_2_id]]);
 		detect_pick(FREQ_3_id, micRight_output[FREQ_ID_1024[FREQ_3_id]]);
