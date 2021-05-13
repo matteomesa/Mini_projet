@@ -2,6 +2,11 @@
 #include <motors.h>
 #include <audio_processing.h>
 #include <arm_math.h>
+#include <chprintf.h>
+#include <usbcfg.h>
+
+#include "ch.h"
+#include "hal.h"
 
 
 static float dist; 
@@ -43,9 +48,14 @@ int16_t pi_regulator(float distance, float goal){
 
 void movement()
 {
+
+
 	//detection musique
 	if( getMusique())
+
 	{
+		//chprintf((BaseSequentialStream *) &SDU1,"Left rotation : %d \n",getLeftRotationSpeed());
+		//chprintf((BaseSequentialStream *) &SDU1,"Right rotation : %d \n",getRightRotationSpeed());
 		right_motor_set_speed(getLeftRotationSpeed());
 		left_motor_set_speed(getRightRotationSpeed());
 		//detection de position

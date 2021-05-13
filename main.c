@@ -83,9 +83,10 @@ int main(void)
     	//uint16_t dist = VL53L0X_get_dist_mm();
     	//chprintf((BaseSequentialStream *) &SDU1, " dist = %d \n ",dist);
 
+        movement();
         
 
-    	chThdSleepMilliseconds(5000);
+    	chThdSleepMilliseconds(500);
     }
     
 }

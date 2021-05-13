@@ -19,8 +19,8 @@ typedef enum {
 } BUFFER_NAME_t;
 
 bool getMusique();
-uint8_t getLeftRotationSpeed();
-uint8_t getRightRotationSpeed();
+int16_t getLeftRotationSpeed();
+int16_t getRightRotationSpeed();
 
 
 void processAudioData(int16_t *data, uint16_t num_samples);
