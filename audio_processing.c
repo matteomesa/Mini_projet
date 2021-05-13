@@ -461,18 +461,6 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		detect_pick(FREQ_3_id, micRight_output[FREQ_ID_1024[FREQ_3_id]]);
 
 
-		float difAmpl1 = tabMaxAmpl[R_ID]-tabMaxAmpl[L_ID];
-		float difAmpl2 = tabMaxAmpl[L_ID]-tabMaxAmpl[F_ID];
-		float ratio = difAmpl1/difAmpl2;
-
-
-
-
-		chprintf((BaseSequentialStream *) &SDU1,"%f %f %f a",difAmpl1,difAmpl2,ratio);
-
-
-
-
 		//detectMusique();
 
 		nb_samples = 0;
