@@ -11,36 +11,30 @@
 
 static float dist; 
 
-#define MAX_SUM_ERROR		100
-#define ERROR_THRESHOLD		10
-#define KP 					1
-#define KI					1
+#define MAX_ERROR		400
+#define MIN_ERROR		140
+#define MAX_SPEED 		320
+#define TARGET 			100
 
-int16_t pi_regulator(float distance, float goal){
 
-	float error = 0;
-	float speed = 0;
 
-	static float sum_error = 0;
-
-	error = distance - goal;
-
-	//disables the PI regulator if the error is to small
-	//this avoids to always move as we cannot exactly be where we want and 
-	//the camera is a bit noisy
-	if(fabs(error) < ERROR_THRESHOLD){
+int16_t pi_regulator(uint16_t distance)
+{
+	
+	if(distance > MAX_ERROR || distance < TARGET)
+	{
 		return 0;
 	}
-
-	sum_error += error;
-
-	//we set a maximum and a minimum for the sum to avoid an uncontrolled growth
-
-
-	speed = KP * error ;
-
-    return (int16_t)speed;
+	if((distance< MAX_ERROR ) && distance > MIN_ERROR)
+	{
+		return MAX_SPEED;
+	}
+	else
+	{
+		return (distance-TARGET)*8;
+	}
 }
+
 
 void movement()
 {
