@@ -18,16 +18,9 @@ typedef enum {
 	BACK_OUTPUT
 } BUFFER_NAME_t;
 
-
-float getPhaseMax(float* data,float* FFTresult);
-
-float phase(float rea, float im);
-
-float getFreqMax(float* data);
-
-float getRightDifPhase();
-
-float getLeftDifPhase();
+bool getMusique();
+uint8_t getLeftRotationSpeed();
+uint8_t getRightRotationSpeed();
 
 
 void processAudioData(int16_t *data, uint16_t num_samples);
