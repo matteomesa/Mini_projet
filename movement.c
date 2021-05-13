@@ -7,7 +7,7 @@
 static float dist; 
 
 #define MAX_SUM_ERROR		100
-#define ERROR_THRESHOLD		100
+#define ERROR_THRESHOLD		10
 #define KP 					1
 #define KI					1
 
@@ -46,6 +46,8 @@ void movement()
 	//detection musique
 	if( getMusique())
 	{
+		right_motor_set_speed(getLeftRotationSpeed());
+		left_motor_set_speed(getRightRotationSpeed());
 		//detection de position
 
 		//detection de dist
@@ -54,7 +56,4 @@ void movement()
 
 		//mouvement
 	}
-		
-
-		
 }
