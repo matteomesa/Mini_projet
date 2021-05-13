@@ -44,12 +44,17 @@ int16_t pi_regulator(float distance, float goal){
 void movement()
 {
 	//detection musique
-
+	if( getMusique())
+	{
 		//detection de position
 
 		//detection de dist
-
+			
 		// PI de la distance 
 
 		//mouvement
+	}
+		
+
+		
 }
