@@ -59,6 +59,8 @@ static float meanAmpl[4][4];
 
 static uint8_t idAmpl[4];
 
+static float tabMaxAmpl[4];
+
 static const uint8_t FREQ_ID_1024[4]={34,43,51,20};
 
 static const uint8_t tabFreqRef[4]={0,0,1,2};
@@ -266,7 +268,7 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 	{
 		//chprintf((BaseSequentialStream *) &SDU1,"Droite 0-45, ratio = %1.4f \n",(amplL-amplR)/(amplL-amplF));
 
-		if((amplL-amplR)/(amplF-amplL)>0.4)
+		if((amplL-amplR)/(amplL-amplF)>0.4)
 		{
 			leftRotationSpeed  =  ROTATION_SPEED;
 			rightRotationSpeed = -ROTATION_SPEED;
@@ -363,8 +365,13 @@ void addNewAmpl()
 	}
 }
 
-void updateMaxAmp(float* tabMaxAmpl[4])
+void updateMaxAmp()
 {
+	tabMaxAmpl[0] = 0;
+	tabMaxAmpl[1] = 0;
+	tabMaxAmpl[2] = 0;
+	tabMaxAmpl[3] = 0;
+	
 	for (uint8_t i =0; i<4;i++)
 		{
 			if(tabMaxAmpl[0] < meanAmpl[i][R_ID])
@@ -438,9 +445,7 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 
 		processMean();
 		addNewAmpl();
-		float tabMaxAmpl[4] = {0};
-
-		updateMaxAmp(tabMaxAmpl);
+		updateMaxAmp();
 
 		
 
@@ -452,6 +457,19 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		detect_pick(FREQ_1_id, micRight_output[FREQ_ID_1024[FREQ_1_id]]);
 		detect_pick(FREQ_2_id, micRight_output[FREQ_ID_1024[FREQ_2_id]]);
 		detect_pick(FREQ_3_id, micRight_output[FREQ_ID_1024[FREQ_3_id]]);
+
+
+		float difAmpl1 = tabMaxAmpl[R_ID]-tabMaxAmpl[L_ID];
+		float difAmpl2 = tabMaxAmpl[L_ID]-tabMaxAmpl[F_ID];
+		float ratio = difAmpl1/difAmpl2;
+
+
+
+
+		chprintf((BaseSequentialStream *) &SDU1,"%f %f %f a",difAmpl1,difAmpl2,ratio);
+
+
+
 
 		//detectMusique();
 
