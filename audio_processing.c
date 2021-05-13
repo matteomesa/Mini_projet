@@ -108,7 +108,7 @@ static uint16_t straight_count;
 
 #define RANGE_TIME		6100
 
-#define LIM_TIME		200
+#define LIM_TIME		400
 
 #define RATIO_ROT	0.4
 
@@ -187,7 +187,7 @@ void detect_pick(uint8_t id, float ampl)
 		float time = GPTD12.tim->CNT;
 		if((ampl > 4*tabPick[0+2*id])&&(time>7000))
 		{
-			chprintf((BaseSequentialStream *) &SDU1,"pic detect, coutnerLastPick = %d",coutnerLastPick);
+			chprintf((BaseSequentialStream *) &SDU1,"pic detect, coutnerLastPick = %d \n",coutnerLastPick);
 			coutnerLastPick = 0;
 			tabTime[index_tab] = time;
 			tabFreq[index_tab] = id;
@@ -243,7 +243,7 @@ void detectMusique()
 				if( (tabFreq2[i+j]==tabFreqRef[j]) && (checkTime(tabTime2[i+j],tabTimeRef[j])) )
 				{
 					
-					if((j==3)&& error)
+					if((j==3)&& error &&(coutnerLastPick < 25))
 					{
 						temp_musique = true;
 					}
@@ -523,7 +523,7 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		detect_pick(FREQ_3_id, micRight_output[FREQ_ID_1024[FREQ_3_id]]);
 
 
-		//detectMusique();
+		detectMusique();
 
 		nb_samples = 0;
 		mustSend++;
