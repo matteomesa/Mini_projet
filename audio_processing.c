@@ -41,7 +41,7 @@ static uint8_t index_tab;
 //Static bool
 
 static bool indexPick;
-static bool muique;
+
 
 
 //Test degueu
@@ -61,14 +61,18 @@ static uint8_t idAmpl[4];
 
 static const uint8_t FREQ_ID_1024[4]={34,43,51,20};
 
+static const uint8_t tabFreqRef[4]={0,0,1,2};
+
+static const uint16_t tabTimeRef[4]={57248,14217,14241,14276};
+
 static uint16_t leftRotationSpeed;
-static uint16_t RightRotationSpeed;
+static uint16_t rightRotationSpeed;
 
 
 
 static float lastdifPhase[NB_MEAN];
 
-static bool muique;
+static bool musique;
 
 
 
@@ -98,7 +102,7 @@ static bool muique;
 
 #define RANGE_TIME		6100
 
-#define LIM_TIME		100
+#define LIM_TIME		200
 
 
 
@@ -109,15 +113,15 @@ static bool muique;
 
 bool checkTime (float time, float timeRef)
 {
-	if((time - timeRef) < LIM_TIME)
+	if(abs(time - timeRef) < LIM_TIME)
 	{
 		return TRUE;
 	}
-	else if(((time+RANGE_TIME) - timeRef) < LIM_TIME)
+	else if(abs((time+RANGE_TIME) - timeRef) < LIM_TIME)
 	{
 		return TRUE;
 	}
-	else if((((time-RANGE_TIME) - timeRef) < LIM_TIME))
+	else if(abs((time-RANGE_TIME) - timeRef) < LIM_TIME)
 	{
 		return TRUE;
 	}
@@ -142,13 +146,13 @@ void detect_pick(uint8_t id, float ampl)
 		float time = GPTD12.tim->CNT;
 		if((ampl > 4*tabPick[0+2*id])&&(time>7000))
 		{
-			chprintf((BaseSequentialStream *) &SDU1,"pic detect, id = %d",id);
+			//chprintf((BaseSequentialStream *) &SDU1,"pic detect, id = %d",id);
 			tabTime[index_tab] = time;
 			tabFreq[index_tab] = id;
 			GPTD12.tim->CNT = 0;
 			
 			
-			chprintf((BaseSequentialStream *) &SDU1," time = %f \n",time);
+			//chprintf((BaseSequentialStream *) &SDU1," time = %f \n",time);
 			if(index_tab == 3)
 			{
 				index_tab = 0;
@@ -183,26 +187,28 @@ void detectMusique()
 		tabFreq2[4+i] = tabFreq[i];
 	}
 
-	musique = false;
+	bool temp_musique = false;
 
 	//comparaison tableau
 
 	for(uint8_t i = 0; i<4;i++)
 	{
-		if( (tabFreq2[i]==tabFreqRef[0]) && (tabTime2[i]==tabTimeRef[0]) )
+		if( (tabFreq2[i]==tabFreqRef[0]) && (checkTime(tabTime2[i],tabTimeRef[0])) )
 		{
 			for(uint8_t j = 0; j<3;j++)
 			{
-				if( (tabFreq2[i+j]==tabFreqRef[j]) && (tabTime2[i+j]==tabTimeRef[j]) )
+				bool error = true;
+					
+				if( (tabFreq2[i+j]==tabFreqRef[j]) && (checkTime(tabTime2[i+j],tabTimeRef[j])) )
 				{
-					if(j==3)
+					if((j==3)&& error)
 					{
-						musique = true;
+						temp_musique = true;
 					}
 				}
 				else
 				{
-					break;
+					error = false;
 				}
 
 			}
@@ -211,14 +217,33 @@ void detectMusique()
 	}
 
 
+
+	if(temp_musique != musique)
+	{
+		chprintf((BaseSequentialStream *) &SDU1,"changement etat musique.   Tabfreq = ");
+
+		for(uint8_t i = 0; i<4;i++)
+		{
+			chprintf((BaseSequentialStream *) &SDU1,"%d ",tabFreq[i]);
+		}
+		chprintf((BaseSequentialStream *) &SDU1,"a \n tabTime = ");
+
+		for(uint8_t i = 0; i<4;i++)
+		{
+			chprintf((BaseSequentialStream *) &SDU1,"%d ",tabTime[i]);
+		}
+
+		chprintf((BaseSequentialStream *) &SDU1,"a \n etat temp_musique = %d, etat musique = %d\n ",temp_musique,musique);
+	}
+
+	
+
+	musique = temp_musique;
+	set_front_led(musique);
+
+
 }
 
-
-boucle 1
-1   boucle     2 3 4
-2	boucle     3 4 5
-3	boucle     4 5 6
-4	boucle     5 6 7 
 
 
 
@@ -437,18 +462,31 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 			}
 		}
 
+		uint16_t time1 = 12100;
+		uint16_t time2 = 11900;
+		uint16_t time3 = 18250;
+		uint16_t time4 = 18500;
+		uint16_t timetest = 12150;
+
+		//chprintf((BaseSequentialStream *) &SDU1,"time 1 = %d, time ref = %d, check time = %d \n",time1,timetest,checkTime(time1,timetest));
+		//chprintf((BaseSequentialStream *) &SDU1,"time 2 = %d, time ref = %d, check time = %d \n",time2,timetest,checkTime(time2,timetest));
+		//chprintf((BaseSequentialStream *) &SDU1,"time 3 = %d, time ref = %d, check time = %d \n",time3,timetest,checkTime(time3,timetest));
+		//chprintf((BaseSequentialStream *) &SDU1,"time 4 = %d, time ref = %d, check time = %d \n",time4,timetest,checkTime(time4,timetest));
+
 
 		//algoPosAmpl(maxAmplLeft,maxAmplFront,maxAmplRight,maxAmplBack);
 
 
-		float ALmR = maxAmplLeft-maxAmplRight;
-		float AFmR = maxAmplFront-maxAmplRight;
+		//float ALmR = maxAmplLeft-maxAmplRight;
+		//float AFmR = maxAmplFront-maxAmplRight;
 
-		float ratio = (ALmR/AFmR);
+		//float ratio = (ALmR/AFmR);
 
 		detect_pick(FREQ_1_id, micRight_output[FREQ_ID_1024[FREQ_1_id]]);
 		detect_pick(FREQ_2_id, micRight_output[FREQ_ID_1024[FREQ_2_id]]);
 		detect_pick(FREQ_3_id, micRight_output[FREQ_ID_1024[FREQ_3_id]]);
+
+		detectMusique();
 
 		nb_samples = 0;
 		mustSend++;
