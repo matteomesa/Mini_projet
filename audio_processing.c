@@ -75,6 +75,9 @@ static int16_t rightRotationSpeed;
 static float lastdifPhase[NB_MEAN];
 
 static bool musique;
+static bool straight;
+
+static uint16_t straight_count;
 
 
 
@@ -121,6 +124,16 @@ bool getMusique()
 	return musique;
 }
 
+bool isStraight()
+{
+	return straight;
+}
+
+uint16_t getStraightCount()
+{
+	return straight_count;
+}
+
 int16_t getLeftRotationSpeed()
 {
 	return leftRotationSpeed;
@@ -160,6 +173,12 @@ bool almostEgalLim(float a,float b,float lim)
 		return FALSE;
 }
 
+
+
+
+
+
+
 void detect_pick(uint8_t id, float ampl)
 {
 	if(ampl > NOISE)
@@ -167,6 +186,7 @@ void detect_pick(uint8_t id, float ampl)
 		float time = GPTD12.tim->CNT;
 		if((ampl > 4*tabPick[0+2*id])&&(time>7000))
 		{
+			
 			//chprintf((BaseSequentialStream *) &SDU1,"pic detect, id = %d",id);
 			tabTime[index_tab] = time;
 			tabFreq[index_tab] = id;
@@ -247,78 +267,108 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 {
 	if((amplL-amplR) > 0 && (amplF-amplB) > 0 && (amplL-amplF) < 0)
 	{
-		//chprintf((BaseSequentialStream *) &SDU1,"Gauche 0-45, ratio = %1.4f \n",(amplL-amplR)/(amplF-amplR));
+		chprintf((BaseSequentialStream *) &SDU1,"Gauche 0-45, ratio = %1.4f \n",(amplL-amplR)/(amplF-amplR));
 
 		if((amplL-amplR)/(amplF-amplL)>RATIO_ROT)
 		{
-			leftRotationSpeed  = -ROTATION_SPEED;
-			rightRotationSpeed =  ROTATION_SPEED;
+			leftRotationSpeed  = ROTATION_SPEED;
+			rightRotationSpeed =  -ROTATION_SPEED;
+
+			straight = false;
+			straight_count = 0;
 			return;
 		}
 		else
 		{
 			leftRotationSpeed  = 0;
 			rightRotationSpeed = 0;
+
+			straight = true;
+			straight_count++;
 			return;
 		}		
 	}
 	if((amplL-amplR) > 0 && (amplF-amplB) > 0 && (amplL-amplF) > 0)
 	{
-		//chprintf((BaseSequentialStream *) &SDU1,"Gauche 45-90 \n");
-		leftRotationSpeed  = -ROTATION_SPEED;
-		rightRotationSpeed =  ROTATION_SPEED;
+		chprintf((BaseSequentialStream *) &SDU1,"Gauche 45-90 \n");
+		leftRotationSpeed  =  ROTATION_SPEED;
+		rightRotationSpeed = -ROTATION_SPEED;
+
+		straight = false;
+		straight_count = 0;
 		return;
 	}
 	if((amplL-amplR) < 0 && (amplF-amplB) > 0 && (amplF-amplR) > 0)
 	{
-		//chprintf((BaseSequentialStream *) &SDU1,"Droite 0-45, ratio = %1.4f \n",(amplL-amplR)/(amplL-amplF));
+		chprintf((BaseSequentialStream *) &SDU1,"Droite 0-45, ratio = %1.4f \n",(amplL-amplR)/(amplL-amplF));
 
-		if((amplL-amplR)/(amplF-amplL)>RATIO_ROT)
+		if((amplL-amplR)/(amplL-amplF)>RATIO_ROT)
 		{
-			leftRotationSpeed  =  ROTATION_SPEED;
-			rightRotationSpeed = -ROTATION_SPEED;
+			leftRotationSpeed  =  -ROTATION_SPEED;
+			rightRotationSpeed = ROTATION_SPEED;
+
+			straight = false;
+			straight_count = 0;
 			return;
 		}
 		else
 		{
 			leftRotationSpeed  = 0;
 			rightRotationSpeed = 0;
+
+			straight = true;
+			straight_count++;
 			return;
 		}
 	}
 	if((amplL-amplR) < 0 && (amplF-amplB) > 0 && (amplF-amplR) < 0)
 	{
-		//chprintf((BaseSequentialStream *) &SDU1,"Droite 45-90 \n");
-		leftRotationSpeed  =  ROTATION_SPEED;
-		rightRotationSpeed = -ROTATION_SPEED;
+		chprintf((BaseSequentialStream *) &SDU1,"Droite 45-90 \n");
+		leftRotationSpeed  =  -ROTATION_SPEED;
+		rightRotationSpeed = ROTATION_SPEED;
+
+		straight = false;
+		straight_count = 0;
 		return;
 	}
 	if((amplL-amplR) < 0 && (amplF-amplB) < 0 && (amplR-amplB) > 0)
 	{
-		//chprintf((BaseSequentialStream *) &SDU1,"Droite 90-135 \n")
-		leftRotationSpeed  =  ROTATION_SPEED;
-		rightRotationSpeed = -ROTATION_SPEED;
+		chprintf((BaseSequentialStream *) &SDU1,"Droite 90-135 \n");
+		leftRotationSpeed  =  -ROTATION_SPEED;
+		rightRotationSpeed = ROTATION_SPEED;
+
+		straight = false;
+		straight_count = 0;
 		return;
 	}
 	if((amplL-amplR) < 0 && (amplF-amplB) < 0 && (amplR-amplB) < 0)
 	{
-		//chprintf((BaseSequentialStream *) &SDU1,"Droite 135-180 \n");
-		leftRotationSpeed  =  ROTATION_SPEED;
-		rightRotationSpeed = -ROTATION_SPEED;
+		chprintf((BaseSequentialStream *) &SDU1,"Droite 135-180 \n");
+		leftRotationSpeed  =  -ROTATION_SPEED;
+		rightRotationSpeed = ROTATION_SPEED;
+
+		straight = false;
+		straight_count = 0;
 		return;
 	}
 	if((amplL-amplR) > 0 && (amplF-amplB) < 0 && (amplB-amplL) > 0)
 	{
-		//chprintf((BaseSequentialStream *) &SDU1,"Gauche 90-135 \n");
-		leftRotationSpeed  = -ROTATION_SPEED;
-		rightRotationSpeed =  ROTATION_SPEED;
+		chprintf((BaseSequentialStream *) &SDU1,"Gauche 90-135 \n");
+		leftRotationSpeed  = ROTATION_SPEED;
+		rightRotationSpeed =  -ROTATION_SPEED;
+
+		straight = false;
+		straight_count = 0;
 		return;
 	}
 	if((amplL-amplR) > 0 && (amplF-amplB) < 0 && (amplB-amplL) < 0)
 	{
-		//chprintf((BaseSequentialStream *) &SDU1,"Gauche 135-180 \n");
-		leftRotationSpeed  = -ROTATION_SPEED;
-		rightRotationSpeed =  ROTATION_SPEED;
+		chprintf((BaseSequentialStream *) &SDU1,"Gauche 135-180 \n");
+		leftRotationSpeed  = ROTATION_SPEED;
+		rightRotationSpeed =  -ROTATION_SPEED;
+
+		straight = false;
+		straight_count = 0;
 		return;
 	}
 
@@ -380,6 +430,10 @@ void addNewAmpl()
 
 void updateMaxAmp()
 {
+	tabMaxAmpl[0] = 0;
+	tabMaxAmpl[1] = 0;
+	tabMaxAmpl[2] = 0;
+	tabMaxAmpl[3] = 0;
 	for (uint8_t i =0; i<4;i++)
 		{
 			if(tabMaxAmpl[0] < meanAmpl[i][R_ID])

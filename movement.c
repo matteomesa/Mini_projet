@@ -49,15 +49,27 @@ int16_t pi_regulator(float distance, float goal){
 void movement()
 {
 
-
-	//detection musique
-	if( getMusique())
-
+	if(isStraight()&&(getStraightCount()> 7 ))
 	{
-		//chprintf((BaseSequentialStream *) &SDU1,"Left rotation : %d \n",getLeftRotationSpeed());
-		//chprintf((BaseSequentialStream *) &SDU1,"Right rotation : %d \n",getRightRotationSpeed());
+		left_motor_set_speed(300);
+		right_motor_set_speed(300);
+
+
+	}
+	else
+	{
 		right_motor_set_speed(getLeftRotationSpeed());
 		left_motor_set_speed(getRightRotationSpeed());
+	}
+
+	//detection musique
+	//if( getMusique())
+
+	//{
+		//chprintf((BaseSequentialStream *) &SDU1,"Left rotation : %d \n",getLeftRotationSpeed());
+		//chprintf((BaseSequentialStream *) &SDU1,"Right rotation : %d \n",getRightRotationSpeed());
+		//right_motor_set_speed(getLeftRotationSpeed());
+		//left_motor_set_speed(getRightRotationSpeed());
 		//detection de position
 
 		//detection de dist
@@ -65,5 +77,5 @@ void movement()
 		// PI de la distance 
 
 		//mouvement
-	}
+	//}
 }
