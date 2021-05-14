@@ -13,7 +13,7 @@ static float dist;
 
 #define MAX_ERROR		400
 #define MIN_ERROR		140
-#define MAX_SPEED 		320
+#define MAX_SPEED 		350
 #define TARGET 			100
 
 
@@ -31,41 +31,33 @@ int16_t regulator(uint16_t distance)
 	}
 	else
 	{
-		return (distance-TARGET)*8;
+		return (distance-TARGET+10)*7;
 	}
 }
 
 
 void movement()
 {
+	
 
-	if(isStraight()&&(getStraightCount()> 7 ))
+	if(getMusique() && isStraight()&&(getStraightCount()> 7 ))
 	{
 		uint16_t speed = regulator(VL53L0X_get_dist_mm());
 		left_motor_set_speed(speed);
 		right_motor_set_speed(speed);
-		chprintf((BaseSequentialStream *) &SDU1,"distance en mm: %d \n",VL53L0X_get_dist_mm());
+		//chprintf((BaseSequentialStream *) &SDU1,"distance en mm: %d \n",VL53L0X_get_dist_mm());
+		return;
 	}
-	else
+	 if(getMusique())
 	{
 		right_motor_set_speed(getLeftRotationSpeed());
 		left_motor_set_speed(getRightRotationSpeed());
+		return;
 	}
-
-	//detection musique
-	//if( getMusique())
-
-	//{
-		//chprintf((BaseSequentialStream *) &SDU1,"Left rotation : %d \n",getLeftRotationSpeed());
-		//chprintf((BaseSequentialStream *) &SDU1,"Right rotation : %d \n",getRightRotationSpeed());
-		//right_motor_set_speed(getLeftRotationSpeed());
-		//left_motor_set_speed(getRightRotationSpeed());
-		//detection de position
-
-		//detection de dist
-			
-		// PI de la distance 
-
-		//mouvement
-	//}
+	 else
+	 {
+		 right_motor_set_speed(0);
+		 left_motor_set_speed(0);
+	 }
 }
+
