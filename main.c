@@ -86,7 +86,7 @@ int main(void)
         movement();
         
 
-    	chThdSleepMilliseconds(500);
+    	chThdSleepMilliseconds(10);
     }
     
 }

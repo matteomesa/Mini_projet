@@ -22,11 +22,11 @@ static uint16_t oldDistance;
 int16_t regulator(uint16_t distance)
 {
 	
-	if(distance > MAX_ERROR || distance < TARGET)
+	if(distance < TARGET)
 	{
 		return 0;
 	}
-	if((distance< MAX_ERROR ) && distance > MIN_ERROR)
+	if(distance > MIN_ERROR)
 	{
 		return MAX_SPEED;
 	}
@@ -41,24 +41,28 @@ void movement()
 {
 	
 
-	if(getMusique() && isStraight()&&(getStraightCount()> 7 ))
+	if(getMusique() && isStraight()&&(getStraightCount()> 5))
 	{
-		uint16_t rotationSpeed;
-		uint16_t distance = VL53L0X_get_dist_mm();
-		if(oldDistance > distance)
-		{
-			if(getStraightSide)		//rotation a gauche
-			{
-				left_motor_set_speed(50);
-				right_motor_set_speed(-50);
-			}
-			else					//roation a droite 
-			{
-				left_motor_set_speed(-50);
-				right_motor_set_speed(50);
-			}
-		}
-		oldDistance = distance;
+	
+//		uint16_t distance = VL53L0X_get_dist_mm();
+//		if(oldDistance > distance)
+//		{
+//			if(getStraightSide())		//rotation a gauche
+//			{
+//				left_motor_set_speed(50);
+//				right_motor_set_speed(-50);
+//				oldDistance = distance;
+//				return;
+//			}
+//			else					//roation a droite
+//			{
+//				left_motor_set_speed(-50);
+//				right_motor_set_speed(50);
+//				oldDistance = distance;
+//				return;
+//			}
+//		}
+		
 		uint16_t speed = regulator(VL53L0X_get_dist_mm());
 		left_motor_set_speed(speed);
 		right_motor_set_speed(speed);

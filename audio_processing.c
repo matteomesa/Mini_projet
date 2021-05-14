@@ -64,7 +64,8 @@ static float tabMaxAmpl[4];
 
 static const uint8_t FREQ_ID_1024[4]={34,43,51,20};
 
-static const uint8_t tabFreqRef[4]={0,0,1,2};
+//static const uint8_t tabFreqRef[4]={0,0,1,2};
+static const uint8_t tabFreqRef[4]={0,0,0,0};
 
 static const uint16_t tabTimeRef[4]={57350,14350,14350,14350};
 
@@ -108,7 +109,7 @@ static uint16_t straight_count;
 
 #define RANGE_TIME		6100
 
-#define LIM_TIME		400
+#define LIM_TIME		200
 
 #define RATIO_ROT	0.4
 
@@ -165,6 +166,14 @@ bool checkTime (uint16_t time, uint16_t timeRef)
 	{
 		return TRUE;
 	}
+	else if(abs(time - 2*timeRef) < LIM_TIME)
+	{
+		return TRUE;
+	}
+	else if (abs(time - 2*timeRef - RANGE_TIME) < LIM_TIME)
+	{
+		return TRUE;
+	}
 	else
 	{
 		return FALSE;
@@ -192,10 +201,11 @@ void detect_pick(uint8_t id, float ampl)
 		float time = GPTD12.tim->CNT;
 		if((ampl > 4*tabPick[0+2*id])&&(time>7000))
 		{
-			chprintf((BaseSequentialStream *) &SDU1,"pic detect, coutnerLastPick = %d \n",coutnerLastPick);
+			//chprintf((BaseSequentialStream *) &SDU1,"pic detect, coutnerLastPick = %d \n",coutnerLastPick);
 			coutnerLastPick = 0;
 			tabTime[index_tab] = time;
-			tabFreq[index_tab] = id;
+			//tabFreq[index_tab] = id;
+			tabFreq[index_tab] = 0;
 			GPTD12.tim->CNT = 0;
 			
 			
@@ -208,6 +218,27 @@ void detect_pick(uint8_t id, float ampl)
 			{
 				index_tab++;
 			}	
+
+
+//			//Affichage tableau si pic
+//
+//			chprintf((BaseSequentialStream *) &SDU1,"\n-- NEW PIC DETECTED --  tabTime: ");
+//			for(uint8_t i=0;i<4;i++)
+//			{
+//				chprintf((BaseSequentialStream *) &SDU1,"%d ",tabTime[i]);
+//			}
+//			chprintf((BaseSequentialStream *) &SDU1,"\n  tabFreq: ");
+//			for(uint8_t i=0;i<4;i++)
+//			{
+//				chprintf((BaseSequentialStream *) &SDU1,"%d ",tabFreq[i]);
+//			}
+//
+//			chprintf((BaseSequentialStream *) &SDU1," --MUSIQUE = %d --",musique);
+
+
+
+
+
 		}
 		tabPick[0+2*id] = tabPick[1+2*id];
 		tabPick[1+2*id] = ampl;
