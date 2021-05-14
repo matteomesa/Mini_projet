@@ -23,6 +23,7 @@ int16_t getLeftRotationSpeed();
 int16_t getRightRotationSpeed();
 uint16_t getStraightCount();
 bool isStraight();
+bool getStraightSide();
 
 
 void processAudioData(int16_t *data, uint16_t num_samples);

@@ -77,7 +77,7 @@ static float lastdifPhase[NB_MEAN];
 
 static bool musique;
 static bool straight;
-
+static bool straightSide;
 static uint16_t straight_count;
 
 
@@ -128,6 +128,11 @@ bool getMusique()
 bool isStraight()
 {
 	return straight;
+}
+
+bool getStraightSide()
+{
+	return straightSide;
 }
 
 uint16_t getStraightCount()
@@ -187,7 +192,7 @@ void detect_pick(uint8_t id, float ampl)
 		float time = GPTD12.tim->CNT;
 		if((ampl > 4*tabPick[0+2*id])&&(time>7000))
 		{
-			//chprintf((BaseSequentialStream *) &SDU1,"pic detect, coutnerLastPick = %d \n",coutnerLastPick);
+			chprintf((BaseSequentialStream *) &SDU1,"pic detect, coutnerLastPick = %d \n",coutnerLastPick);
 			coutnerLastPick = 0;
 			tabTime[index_tab] = time;
 			tabFreq[index_tab] = id;
@@ -284,6 +289,7 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 			leftRotationSpeed  = 0;
 			rightRotationSpeed = 0;
 
+			straightSide = TRUE;
 			straight = true;
 			straight_count++;
 			return;
@@ -317,6 +323,7 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 			leftRotationSpeed  = 0;
 			rightRotationSpeed = 0;
 
+			straightSide = FALSE;
 			straight = true;
 			straight_count++;
 			return;
@@ -506,8 +513,6 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		arm_cmplx_mag_f32(micLeft_cmplx_input, micLeft_output, FFT_SIZE);
 		arm_cmplx_mag_f32(micFront_cmplx_input, micFront_output, FFT_SIZE);
 		arm_cmplx_mag_f32(micBack_cmplx_input, micBack_output, FFT_SIZE);
-
-		chprintf((BaseSequentialStream *) &SDU1,"mesure son effectuee \n");
 
 		processMean();
 		addNewAmpl();
