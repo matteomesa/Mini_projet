@@ -64,6 +64,10 @@ void movement()
 //		}
 		
 		uint16_t speed = regulator(VL53L0X_get_dist_mm());
+		if(speed == 0)
+		{
+			set_frontLed(TRUE);
+		}
 		left_motor_set_speed(speed);
 		right_motor_set_speed(speed);
 		//chprintf((BaseSequentialStream *) &SDU1,"distance en mm: %d \n",VL53L0X_get_dist_mm());
@@ -71,14 +75,16 @@ void movement()
 	}
 	 if(getMusique())
 	{
+		set_frontLed(FALSE);
 		right_motor_set_speed(getLeftRotationSpeed());
 		left_motor_set_speed(getRightRotationSpeed());
 		return;
 	}
 	 else
 	 {
-		 right_motor_set_speed(0);
-		 left_motor_set_speed(0);
+	 	set_frontLed(FALSE);
+		right_motor_set_speed(0);
+		left_motor_set_speed(0);
 	 }
 }
 
