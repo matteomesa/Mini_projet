@@ -4,9 +4,12 @@
 #include <usbcfg.h>
 #include <chprintf.h>
 
+
+
 #include <motors.h>
 #include <audio/microphone.h>
 #include <audio_processing.h>
+#include <led.h>
 #include <communications.h>
 #include <fft.h>
 #include <arm_math.h>
@@ -201,6 +204,7 @@ void detect_pick(uint8_t id, uint32_t ampl)
 		float time = GPTD12.tim->CNT;
 		if((ampl > 3*tabPick[0+2*id])&&(time>7000))
 		{
+			set_ledPick();
 			chprintf((BaseSequentialStream *) &SDU1,"pic detect, coutnerLastPick = %d \n",coutnerLastPick);
 			coutnerLastPick = 0;
 			tabTime[index_tab] = time;
