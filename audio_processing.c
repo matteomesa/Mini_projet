@@ -46,21 +46,21 @@ static bool indexPick;
 
 
 //Test degueu
-static float lastAmplR[NB_MEAN];
-static float lastAmplL[NB_MEAN];
-static float lastAmplF[NB_MEAN];
-static float lastAmplB[NB_MEAN];
+static uint32_t lastAmplR[NB_MEAN];
+static uint32_t lastAmplL[NB_MEAN];
+static uint32_t lastAmplF[NB_MEAN];
+static uint32_t lastAmplB[NB_MEAN];
 
 
 //tableau des dernière amplitudes (3 freq / 4 mic / 10 donnée)
-static float lastAmpl[4][4][NB_MEAN];
+static uint32_t lastAmpl[4][4][NB_MEAN];
 
 //moyenne des dernières mesures des mic
-static float meanAmpl[4][4];
+static uint32_t meanAmpl[4][4];
 
 static uint8_t idAmpl[4];
 
-static float tabMaxAmpl[4];
+static uint32_t tabMaxAmpl[4];
 
 static const uint8_t FREQ_ID_1024[4]={34,43,51,20};
 
@@ -194,14 +194,14 @@ bool almostEgalLim(float a,float b,float lim)
 
 
 
-void detect_pick(uint8_t id, float ampl)
+void detect_pick(uint8_t id, uint32_t ampl)
 {
 	if(ampl > NOISE)
 	{
 		float time = GPTD12.tim->CNT;
-		if((ampl > 4*tabPick[0+2*id])&&(time>7000))
+		if((ampl > 3*tabPick[0+2*id])&&(time>7000))
 		{
-			//chprintf((BaseSequentialStream *) &SDU1,"pic detect, coutnerLastPick = %d \n",coutnerLastPick);
+			chprintf((BaseSequentialStream *) &SDU1,"pic detect, coutnerLastPick = %d \n",coutnerLastPick);
 			coutnerLastPick = 0;
 			tabTime[index_tab] = time;
 			//tabFreq[index_tab] = id;
@@ -452,10 +452,10 @@ void addNewAmpl()
 		if(micRight_output[FREQ_ID_1024[i]] > 15000)
 		{
 
-			lastAmpl[i][R_ID][idAmpl[i]] = micRight_output[FREQ_ID_1024[i]];
-			lastAmpl[i][L_ID][idAmpl[i]] = micLeft_output[FREQ_ID_1024[i]];
-			lastAmpl[i][F_ID][idAmpl[i]] = micFront_output[FREQ_ID_1024[i]];
-			lastAmpl[i][B_ID][idAmpl[i]] = micBack_output[FREQ_ID_1024[i]];
+			lastAmpl[i][R_ID][idAmpl[i]] = (uint32_t)micRight_output[FREQ_ID_1024[i]];
+			lastAmpl[i][L_ID][idAmpl[i]] = (uint32_t)micLeft_output[FREQ_ID_1024[i]];
+			lastAmpl[i][F_ID][idAmpl[i]] = (uint32_t)micFront_output[FREQ_ID_1024[i]];
+			lastAmpl[i][B_ID][idAmpl[i]] = (uint32_t)micBack_output[FREQ_ID_1024[i]];
 
 			idAmpl[i]++;
 			if(idAmpl[i] >= NB_MEAN)
