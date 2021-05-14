@@ -174,6 +174,10 @@ bool checkTime (uint16_t time, uint16_t timeRef)
 	{
 		return TRUE;
 	}
+	else if (abs(time - 2*timeRef + RANGE_TIME) < LIM_TIME)
+	{
+		return TRUE;
+	}
 	else
 	{
 		return FALSE;
@@ -199,9 +203,9 @@ void detect_pick(uint8_t id, uint32_t ampl)
 	if(ampl > NOISE)
 	{
 		float time = GPTD12.tim->CNT;
-		if((ampl > 3*tabPick[0+2*id])&&(time>7000))
+		if((ampl > 4*tabPick[0+2*id])&&(time>7000))
 		{
-			chprintf((BaseSequentialStream *) &SDU1,"pic detect, coutnerLastPick = %d \n",coutnerLastPick);
+			//chprintf((BaseSequentialStream *) &SDU1,"pic detect, coutnerLastPick = %d \n",coutnerLastPick);
 			coutnerLastPick = 0;
 			tabTime[index_tab] = time;
 			//tabFreq[index_tab] = id;
@@ -234,7 +238,7 @@ void detect_pick(uint8_t id, uint32_t ampl)
 //			}
 //
 //			chprintf((BaseSequentialStream *) &SDU1," --MUSIQUE = %d --",musique);
-
+//
 
 
 
@@ -569,6 +573,13 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		{
 			coutnerLastPick++;
 		}
+
+		float ampl1 = micRight_output[34];
+		float ampl2 = micRight_output[43];
+		float ampl3 = micRight_output[51];
+
+		chprintf((BaseSequentialStream *) &SDU1,"%1.1f %1.1f %1.1fa",ampl1,ampl2,ampl3);
+
 	}
 }
 

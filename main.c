@@ -86,7 +86,7 @@ int main(void)
         //movement();
         
 
-    	chThdSleepMilliseconds(10);
+    	chThdSleepMilliseconds(50);
     }
     
 }
@@ -98,5 +98,17 @@ void __stack_chk_fail(void)
 {
     chSysHalt("Stack smashing detected");
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
