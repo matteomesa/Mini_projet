@@ -17,6 +17,7 @@
 #include <communications.h>
 #include <arm_math.h>
 
+
 static uint8_t i = 0;
 
 
@@ -66,6 +67,9 @@ int main(void)
     motors_init();
     //inits the distance sensor
     VL53L0X_start();
+
+
+    //led_start();
     
 
 
@@ -78,12 +82,7 @@ int main(void)
     /* Infinite loop. */
     while (1) 
     {
-        //chprintf((BaseSequentialStream *) &SDU1,"%1.5f %1.5f %1.5f a",getRightDifPhase(),getLeftDifPhase(),getRightDifPhase()+getLeftDifPhase());
-       
-    	//uint16_t dist = VL53L0X_get_dist_mm();
-    	//chprintf((BaseSequentialStream *) &SDU1, " dist = %d \n ",dist);
-
-        //movement();
+       // movement();
         
 
     	chThdSleepMilliseconds(50);

@@ -10,6 +10,7 @@
 #include <communications.h>
 #include <fft.h>
 #include <arm_math.h>
+#include <led.h>
 
 //semaphore
 static BSEMAPHORE_DECL(sendToComputer_sem, TRUE);
@@ -238,7 +239,7 @@ void detect_pick(uint8_t id, uint32_t ampl)
 //			}
 //
 //			chprintf((BaseSequentialStream *) &SDU1," --MUSIQUE = %d --",musique);
-//
+
 
 
 
@@ -578,7 +579,7 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		float ampl2 = micRight_output[43];
 		float ampl3 = micRight_output[51];
 
-		chprintf((BaseSequentialStream *) &SDU1,"%1.1f %1.1f %1.1fa",ampl1,ampl2,ampl3);
+		//chprintf((BaseSequentialStream *) &SDU1,"%1.1f %1.1f %1.1fa",ampl1,ampl2,ampl3);
 
 	}
 }
