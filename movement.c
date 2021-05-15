@@ -68,6 +68,10 @@ void movement()
 		{
 			set_frontLed(TRUE);
 		}
+		else
+		{
+			set_frontLed(FALSE);
+		}
 		left_motor_set_speed(speed);
 		right_motor_set_speed(speed);
 		//chprintf((BaseSequentialStream *) &SDU1,"distance en mm: %d \n",VL53L0X_get_dist_mm());

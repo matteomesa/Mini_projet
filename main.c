@@ -17,8 +17,8 @@
 #include <communications.h>
 #include <arm_math.h>
 
+#define SLEEPTIME_MAIN 50
 
-static uint8_t i = 0;
 
 
 static void serial_start(void)
@@ -79,10 +79,10 @@ int main(void)
     /* Infinite loop. */
     while (1) 
     {
-       // movement();
+        movement();
         
 
-    	chThdSleepMilliseconds(50);
+    	chThdSleepMilliseconds(SLEEPTIME_MAIN);
     }
     
 }

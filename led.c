@@ -14,7 +14,7 @@ static bool ledPick;
 static bool frontLed;
 
 static uint8_t coutnerLedPick;
-static uint8_t numberLed;
+
 
 static THD_WORKING_AREA(waLed, 128);
 static THD_FUNCTION(Led, arg) 
@@ -24,7 +24,13 @@ static THD_FUNCTION(Led, arg)
     (void)arg;
      while(1)
     {
-    	set_front_led(getMusique());
+    	
+    	update_ledPick();
+    	update_FrontLed();
+
+
+
+    	chThdSleepMilliseconds(30);
 
 
     }
@@ -32,46 +38,40 @@ static THD_FUNCTION(Led, arg)
 
 void update_ledPick()
 {
-	if(getMusique())	
+
+	if(getMusique())
 	{
-		set_led(LED1,TRUE);
-		set_Led(LED3,TRUE);
-		set_led(LED5,TRUE);
-		set_Led(LED7,TRUE);
-		if(ledPick && coutnerLedPick < 4)
+		set_all_led(TRUE);
+
+		if(ledPick)
 		{
-			//eteindre une led numberLed
-			set_led(numberLed,FALSE);
+			set_all_led(FALSE);
 			coutnerLedPick++;
 		}
-		else
+		if(coutnerLedPick > 10)
 		{
-			//rallumer la led numberLed
-			set_led(numberLed,TRUE);
-			if(numberLed == 4)
-			{
-				numberLed = 0;
-			}
-			else
-			{
-				numberLed ++;
-			}
 			ledPick = FALSE;
-		}	
-	}	
+		}
+	}
+	else
+	{
+		set_all_led(FALSE);
+	}
 }
+
+
 
 void update_FrontLed()
 {
 	if(!getMusique())
 	{
 		set_front_led(FALSE);
+		return;
 	}
-	if(frontLed)
-	{
-		set_front_led(frontLed);
-	}
+	set_front_led(frontLed);
 }
+
+
 void led_start(void){
 	chThdCreateStatic(waLed, sizeof(waLed), NORMALPRIO, Led, NULL);
 }
@@ -79,9 +79,18 @@ void led_start(void){
 void set_ledPick()
 {
 	ledPick = TRUE;
+	coutnerLedPick =0;
 }
 
 void set_frontLed(bool state)
 {
 	frontLed = state;
+}
+
+void set_all_led(bool state)
+{
+	set_led(LED1,state);
+	set_led(LED3,state);
+	set_led(LED5,state);
+	set_led(LED7,state);
 }

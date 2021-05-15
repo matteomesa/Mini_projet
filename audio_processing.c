@@ -14,8 +14,43 @@
 #include <fft.h>
 #include <arm_math.h>
 
+
+#define FFT_SIZE 1024
+#define NB_MEAN	5
+
+#define MIN_FREQ		20	//we don't analyze before this index to not use resources for nothing
+#define MAX_FREQ		60	//we don't analyze after this index to not use resources for nothing
+#define ALPHA			0.7 // coefficient to filter diff phase
+#define FREQ_1			531 //first frequence to detect sound
+#define FREQ_2			671 //second frequence to detect sound
+#define FREQ_3			796 //third frequence to detect sound
+#define FREQ_4          312 //4ème fre
+
+#define FREQ_1_id		0
+#define FREQ_2_id		1
+#define FREQ_3_id		2
+#define FREQ_4_id		3
+
+#define ROTATION_SPEED	250
+
+
+
+#define NOISE 			5000
+
+#define R_ID            0
+#define L_ID            1
+#define B_ID            2
+#define F_ID            3
+
+#define RANGE_TIME		6100
+
+#define LIM_TIME		200
+
+#define RATIO_ROT	0.4
+
+
 //semaphore
-static BSEMAPHORE_DECL(sendToComputer_sem, TRUE);
+//static BSEMAPHORE_DECL(sendToComputer_sem, TRUE);
 
 //2 times FFT_SIZE because these arrays contain complex numbers (real + imaginary)
 static float micLeft_cmplx_input[2 * FFT_SIZE];
@@ -86,35 +121,6 @@ static uint16_t straight_count;
 
 
 
-#define MIN_FREQ		20	//we don't analyze before this index to not use resources for nothing
-#define MAX_FREQ		60	//we don't analyze after this index to not use resources for nothing
-#define ALPHA			0.7 // coefficient to filter diff phase
-#define FREQ_1			531 //first frequence to detect sound
-#define FREQ_2			671 //second frequence to detect sound
-#define FREQ_3			796 //third frequence to detect sound
-#define FREQ_4          312 //4ème fre
-
-#define FREQ_1_id		0
-#define FREQ_2_id		1
-#define FREQ_3_id		2
-#define FREQ_4_id		3
-
-#define ROTATION_SPEED	250
-
-
-
-#define NOISE 			5000
-
-#define R_ID            0
-#define L_ID            1
-#define B_ID            2
-#define F_ID            3
-
-#define RANGE_TIME		6100
-
-#define LIM_TIME		200
-
-#define RATIO_ROT	0.4
 
 
 
@@ -204,6 +210,7 @@ void detect_pick(uint8_t id, uint32_t ampl)
 		float time = GPTD12.tim->CNT;
 		if((ampl > 4*tabPick[0+2*id])&&(time>7000))
 		{
+			set_ledPick();
 			//chprintf((BaseSequentialStream *) &SDU1,"pic detect, coutnerLastPick = %d \n",coutnerLastPick);
 			coutnerLastPick = 0;
 			tabTime[index_tab] = time;
