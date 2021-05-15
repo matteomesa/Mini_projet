@@ -14,6 +14,8 @@ CSRC += ./main.c \
 		./communications.c \
 		./fft.c \
 		./movement.c\
+		./led.c\
+
 
 #Header folders to include
 INCDIR += 

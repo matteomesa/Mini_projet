@@ -4,13 +4,15 @@
 #include <usbcfg.h>
 #include <chprintf.h>
 
+
+
 #include <motors.h>
 #include <audio/microphone.h>
 #include <audio_processing.h>
+#include <led.h>
 #include <communications.h>
 #include <fft.h>
 #include <arm_math.h>
-#include <led.h>
 
 //semaphore
 static BSEMAPHORE_DECL(sendToComputer_sem, TRUE);
@@ -172,10 +174,6 @@ bool checkTime (uint16_t time, uint16_t timeRef)
 		return TRUE;
 	}
 	else if (abs(time - 2*timeRef - RANGE_TIME) < LIM_TIME)
-	{
-		return TRUE;
-	}
-	else if (abs(time - 2*timeRef + RANGE_TIME) < LIM_TIME)
 	{
 		return TRUE;
 	}
@@ -574,13 +572,6 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		{
 			coutnerLastPick++;
 		}
-
-		float ampl1 = micRight_output[34];
-		float ampl2 = micRight_output[43];
-		float ampl3 = micRight_output[51];
-
-		//chprintf((BaseSequentialStream *) &SDU1,"%1.1f %1.1f %1.1fa",ampl1,ampl2,ampl3);
-
 	}
 }
 

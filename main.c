@@ -67,10 +67,7 @@ int main(void)
     motors_init();
     //inits the distance sensor
     VL53L0X_start();
-
-
-    //led_start();
-    
+    led_start();
 
 
     //send_tab is used to save the state of the buffer to send (double buffering)
@@ -97,17 +94,5 @@ void __stack_chk_fail(void)
 {
     chSysHalt("Stack smashing detected");
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 
