@@ -28,7 +28,6 @@
 #define TIME4			14350
 
 
-
 #define FREQ_1			531 //first frequence to detect sound
 #define FREQ_2			671 //second frequence to detect sound
 #define FREQ_3			796 //third frequence to detect sound
@@ -88,7 +87,6 @@ static float tabPick[NB_OLD_PIC*NB_FREQ];
 
 
 //Static int
-static uint8_t index_tab;
 static uint16_t coutnerLastPick;
 
 
@@ -106,8 +104,7 @@ static uint32_t tabMaxAmpl[NB_MIC];
 
 static const uint8_t FREQ_ID_1024[NB_FREQ]={FREQ_1_POS,FREQ_2_POS,FREQ_3_POS};
 
-//static const uint8_t tabFreqRef[4]={0,0,1,2};
-static const uint8_t tabFreqRef[4]={0,0,0,0};
+
 
 static const uint16_t tabTimeRef[NB_NOTE]={TIME1,TIME2,TIME3,TIME4};
 
@@ -202,11 +199,9 @@ void detect_pick(uint8_t id, uint32_t ampl)
 		if((ampl > PIC_FACTOR*tabPick[NB_OLD_PIC*id])&&(time>PIC_TIM_LIM))
 		{
 			set_ledPick();
-			//chprintf((BaseSequentialStream *) &SDU1,"pic detect, coutnerLastPick = %d \n",coutnerLastPick);
+
 			coutnerLastPick = 0;
 			tabTime[index_tab] = time;
-			//tabFreq[index_tab] = id;
-			tabFreq[index_tab] = 0;
 			GPTD12.tim->CNT = 0;
 			
 			index_tab++;
@@ -215,7 +210,6 @@ void detect_pick(uint8_t id, uint32_t ampl)
 			{
 				index_tab =0;
 			}
-			//chprintf((BaseSequentialStream *) &SDU1," time = %f \n",time);
 		}
 		tabPick[0+NB_OLD_PIC*id] = tabPick[1+NB_OLD_PIC*id];
 		tabPick[1+NB_OLD_PIC*id] = ampl;
@@ -279,8 +273,10 @@ void detectMusique(void)
 
 void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 {
+	//Gauche 0-45
 	if((amplL-amplR) > 0 && (amplF-amplB) > 0 && (amplL-amplF) < 0)
 	{
+		//not close
 		if((amplL-amplR)/(amplF-amplL)>RATIO_ROT)
 		{
 			leftRotationSpeed  = ROTATION_SPEED;
@@ -290,6 +286,7 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 			straight_count = 0;
 			return;
 		}
+		//very close
 		else
 		{
 			leftRotationSpeed  = 0;
@@ -301,6 +298,7 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 			return;
 		}		
 	}
+	//Gauche 45-90
 	if((amplL-amplR) > 0 && (amplF-amplB) > 0 && (amplL-amplF) > 0)
 	{
 		leftRotationSpeed  =  ROTATION_SPEED;
@@ -310,8 +308,10 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 		straight_count = 0;
 		return;
 	}
+	//Droite 0-45
 	if((amplL-amplR) < 0 && (amplF-amplB) > 0 && (amplF-amplR) > 0)
 	{
+		//not close
 		if((amplL-amplR)/(amplL-amplF)>RATIO_ROT)
 		{
 			leftRotationSpeed  =  -ROTATION_SPEED;
@@ -321,6 +321,7 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 			straight_count = 0;
 			return;
 		}
+		//close
 		else
 		{
 			leftRotationSpeed  = 0;
@@ -332,6 +333,7 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 			return;
 		}
 	}
+	//Droite 45-90
 	if((amplL-amplR) < 0 && (amplF-amplB) > 0 && (amplF-amplR) < 0)
 	{
 		leftRotationSpeed  =  -ROTATION_SPEED;
@@ -341,6 +343,7 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 		straight_count = 0;
 		return;
 	}
+	//Droite 90-135
 	if((amplL-amplR) < 0 && (amplF-amplB) < 0 && (amplR-amplB) > 0)
 	{
 		leftRotationSpeed  =  -ROTATION_SPEED;
@@ -350,6 +353,7 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 		straight_count = 0;
 		return;
 	}
+	//Droite 135-180
 	if((amplL-amplR) < 0 && (amplF-amplB) < 0 && (amplR-amplB) < 0)
 	{
 		leftRotationSpeed  =  -ROTATION_SPEED;
@@ -359,6 +363,7 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 		straight_count = 0;
 		return;
 	}
+	//Gauche 135-180
 	if((amplL-amplR) > 0 && (amplF-amplB) < 0 && (amplB-amplL) > 0)
 	{
 		leftRotationSpeed  = ROTATION_SPEED;
@@ -368,6 +373,7 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 		straight_count = 0;
 		return;
 	}
+	//Gauche 90-135
 	if((amplL-amplR) > 0 && (amplF-amplB) < 0 && (amplB-amplL) < 0)
 	{
 		leftRotationSpeed  = ROTATION_SPEED;
@@ -500,18 +506,21 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		arm_cmplx_mag_f32(micFront_cmplx_input, micFront_output, FFT_SIZE);
 		arm_cmplx_mag_f32(micBack_cmplx_input, micBack_output, FFT_SIZE);
 
-		// modification de tabMaxAmpl avec les 
+		// modification de tabMaxAmpl avec les nouvelles valeurs 
 
 		processMean();
 		addNewAmpl();
 		updateMaxAmp();
 
+		//modification vitesse rotation
+
 		algoPosAmpl(tabMaxAmpl[L_ID],tabMaxAmpl[F_ID],tabMaxAmpl[R_ID],tabMaxAmpl[B_ID]);
+
+		//detection musique
 
 		detect_pick(FREQ_1_id, micRight_output[FREQ_ID_1024[FREQ_1_id]]);
 		detect_pick(FREQ_2_id, micRight_output[FREQ_ID_1024[FREQ_2_id]]);
 		detect_pick(FREQ_3_id, micRight_output[FREQ_ID_1024[FREQ_3_id]]);
-
 
 		detectMusique();
 
