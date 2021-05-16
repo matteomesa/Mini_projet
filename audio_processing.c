@@ -10,28 +10,42 @@
 #include <audio/microphone.h>
 #include <audio_processing.h>
 #include <led.h>
-#include <communications.h>
 #include <fft.h>
 #include <arm_math.h>
 
 
-#define FFT_SIZE 1024
-#define NB_MEAN	5
+#define FFT_SIZE		1024
+#define NB_MEAN			5
 
-#define MIN_FREQ		20	//we don't analyze before this index to not use resources for nothing
-#define MAX_FREQ		60	//we don't analyze after this index to not use resources for nothing
-#define ALPHA			0.7 // coefficient to filter diff phase
+#define NB_MIC			4
+#define NB_FREQ			3
+
+#define NB_NOTE			4
+
+#define TIME1			57350
+#define TIME2 			14350 
+#define TIME3			14350
+#define TIME4			14350
+
+
+
 #define FREQ_1			531 //first frequence to detect sound
 #define FREQ_2			671 //second frequence to detect sound
 #define FREQ_3			796 //third frequence to detect sound
-#define FREQ_4          312 //4ème fre
 
 #define FREQ_1_id		0
 #define FREQ_2_id		1
 #define FREQ_3_id		2
-#define FREQ_4_id		3
+
+#define FREQ_1_POS		34
+#define FREQ_2_POS		44
+#define FREQ_3_POS		51
 
 #define ROTATION_SPEED	250
+
+#define PIC_FACTOR		4
+#define PIC_TIM_LIM		7000
+#define NB_OLD_PIC		2
 
 
 
@@ -46,11 +60,15 @@
 
 #define LIM_TIME		200
 
-#define RATIO_ROT	0.4
+#define RATIO_ROT		0.4
+
+#define TIME_NO_MUSIC	25
+
+#define MAX_COUNTER		65000
 
 
 //semaphore
-//static BSEMAPHORE_DECL(sendToComputer_sem, TRUE);
+static BSEMAPHORE_DECL(sendToComputer_sem, TRUE);
 
 //2 times FFT_SIZE because these arrays contain complex numbers (real + imaginary)
 static float micLeft_cmplx_input[2 * FFT_SIZE];
@@ -64,10 +82,10 @@ static float micRight_output[FFT_SIZE];
 static float micFront_output[FFT_SIZE];
 static float micBack_output[FFT_SIZE];
 
-static uint8_t tabFreq[4];
-static uint16_t tabTime[4];
+static uint8_t tabFreq[NB_NOTE];
+static uint16_t tabTime[NB_NOTE];
 
-static float tabPick[6];
+static float tabPick[NB_OLD_PIC*NB_FREQ];
 
 //Static float 
 
@@ -79,40 +97,25 @@ static uint16_t coutnerLastPick;
 
 //Static bool
 
-static bool indexPick;
-
-
-
-//Test degueu
-static uint32_t lastAmplR[NB_MEAN];
-static uint32_t lastAmplL[NB_MEAN];
-static uint32_t lastAmplF[NB_MEAN];
-static uint32_t lastAmplB[NB_MEAN];
-
-
 //tableau des dernière amplitudes (3 freq / 4 mic / 10 donnée)
-static uint32_t lastAmpl[4][4][NB_MEAN];
+static uint32_t lastAmpl[NB_FREQ][NB_MIC][NB_MEAN];
 
 //moyenne des dernières mesures des mic
-static uint32_t meanAmpl[4][4];
+static uint32_t meanAmpl[NB_FREQ][NB_MIC];
 
-static uint8_t idAmpl[4];
+static uint8_t idAmpl[NB_FREQ];
 
-static uint32_t tabMaxAmpl[4];
+static uint32_t tabMaxAmpl[NB_MIC];
 
-static const uint8_t FREQ_ID_1024[4]={34,43,51,20};
+static const uint8_t FREQ_ID_1024[NB_FREQ]={FREQ_1_POS,FREQ_2_POS,FREQ_3_POS};
 
 //static const uint8_t tabFreqRef[4]={0,0,1,2};
 static const uint8_t tabFreqRef[4]={0,0,0,0};
 
-static const uint16_t tabTimeRef[4]={57350,14350,14350,14350};
+static const uint16_t tabTimeRef[NB_NOTE]={TIME1,TIME2,TIME3,TIME4};
 
 static int16_t leftRotationSpeed;
 static int16_t rightRotationSpeed;
-
-
-
-static float lastdifPhase[NB_MEAN];
 
 static bool musique;
 static bool straight;
@@ -124,11 +127,10 @@ static uint16_t straight_count;
 
 
 
-/*
-*	Simple function used to detect the highest value in a buffer
-*	and to execute a motor command depending on it
+/*  -----------------------------------------------------
+*	Simple function used to return static to other thread
+*   -----------------------------------------------------
 */
-
 
 bool getMusique()
 {
@@ -161,6 +163,11 @@ int16_t getRightRotationSpeed()
 }
 
 
+/*  -----------------------------------------------------
+*	3 functions used to detect music
+*   -----------------------------------------------------
+*/
+
 bool checkTime (uint16_t time, uint16_t timeRef)
 {
 	if(abs(time - timeRef) < LIM_TIME)
@@ -189,26 +196,13 @@ bool checkTime (uint16_t time, uint16_t timeRef)
 	}
 }
 
-bool almostEgalLim(float a,float b,float lim)
-{
-	if((a-b)*(a-b)<lim*lim)
-		return TRUE;
-	else
-		return FALSE;
-}
-
-
-
-
-
-
 
 void detect_pick(uint8_t id, uint32_t ampl)
 {
 	if(ampl > NOISE)
 	{
 		float time = GPTD12.tim->CNT;
-		if((ampl > 4*tabPick[0+2*id])&&(time>7000))
+		if((ampl > PIC_FACTOR*tabPick[NB_OLD_PIC*id])&&(time>PIC_TIM_LIM))
 		{
 			set_ledPick();
 			//chprintf((BaseSequentialStream *) &SDU1,"pic detect, coutnerLastPick = %d \n",coutnerLastPick);
@@ -218,78 +212,57 @@ void detect_pick(uint8_t id, uint32_t ampl)
 			tabFreq[index_tab] = 0;
 			GPTD12.tim->CNT = 0;
 			
-			
-			//chprintf((BaseSequentialStream *) &SDU1," time = %f \n",time);
-			if(index_tab == 3)
+			index_tab++;
+
+			if(index_tab == NB_NOTE)
 			{
-				index_tab = 0;
+				index_tab =0;
 			}
-			else
-			{
-				index_tab++;
-			}	
-
-
-//			//Affichage tableau si pic
-//
-//			chprintf((BaseSequentialStream *) &SDU1,"\n-- NEW PIC DETECTED --  tabTime: ");
-//			for(uint8_t i=0;i<4;i++)
-//			{
-//				chprintf((BaseSequentialStream *) &SDU1,"%d ",tabTime[i]);
-//			}
-//			chprintf((BaseSequentialStream *) &SDU1,"\n  tabFreq: ");
-//			for(uint8_t i=0;i<4;i++)
-//			{
-//				chprintf((BaseSequentialStream *) &SDU1,"%d ",tabFreq[i]);
-//			}
-//
-//			chprintf((BaseSequentialStream *) &SDU1," --MUSIQUE = %d --",musique);
-
-
-
-
-
+			//chprintf((BaseSequentialStream *) &SDU1," time = %f \n",time);
 		}
-		tabPick[0+2*id] = tabPick[1+2*id];
-		tabPick[1+2*id] = ampl;
+		tabPick[0+NB_OLD_PIC*id] = tabPick[1+NB_OLD_PIC*id];
+		tabPick[1+NB_OLD_PIC*id] = ampl;
 	}
 }
 
 
 void detectMusique()
 {
-	uint16_t tabTime2[8];
-	uint8_t tabFreq2[8];
 
-	for (uint8_t i=0;i<4;i++)
+	//création double tableau de temps
+
+	uint16_t tabTime2[2*NB_NOTE];
+	uint8_t tabFreq2[2*NB_NOTE];
+
+	for (uint8_t i=0;i<NB_NOTE;i++)
 	{
 		tabTime2[i] = tabTime[i];
 		tabFreq2[i] = tabFreq[i];
 	}
-	for (uint8_t i=0;i<4;i++)
+	for (uint8_t i=0;i<NB_NOTE;i++)
 	{
-		tabTime2[4+i] = tabTime[i];
-		tabFreq2[4+i] = tabFreq[i];
+		tabTime2[NB_NOTE+i] = tabTime[i];
+		tabFreq2[NB_NOTE+i] = tabFreq[i];
 	}
 
 	bool temp_musique = false;
 
 	//comparaison tableau
 
-	for(uint8_t i = 0; i<4;i++)
+	for(uint8_t i = 0; i<NB_NOTE;i++)
 	{
 		if( (tabFreq2[i]==tabFreqRef[0]) && (checkTime(tabTime2[i],tabTimeRef[0])) )
 		{
 			
 			bool error = true;
-			for(uint8_t j = 1; j<4;j++)
+			for(uint8_t j = 1; j<NB_NOTE;j++)
 			{
 				
 					
 				if( (tabFreq2[i+j]==tabFreqRef[j]) && (checkTime(tabTime2[i+j],tabTimeRef[j])) )
 				{
 					
-					if((j==3)&& error &&(coutnerLastPick < 25))
+					if((j == NB_NOTE-1)&& error &&(coutnerLastPick < TIME_NO_MUSIC))
 					{
 						temp_musique = true;
 					}
@@ -314,8 +287,6 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 {
 	if((amplL-amplR) > 0 && (amplF-amplB) > 0 && (amplL-amplF) < 0)
 	{
-		//chprintf((BaseSequentialStream *) &SDU1,"Gauche 0-45, ratio = %1.4f \n",(amplL-amplR)/(amplF-amplR));
-
 		if((amplL-amplR)/(amplF-amplL)>RATIO_ROT)
 		{
 			leftRotationSpeed  = ROTATION_SPEED;
@@ -338,7 +309,6 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 	}
 	if((amplL-amplR) > 0 && (amplF-amplB) > 0 && (amplL-amplF) > 0)
 	{
-		//chprintf((BaseSequentialStream *) &SDU1,"Gauche 45-90 \n");
 		leftRotationSpeed  =  ROTATION_SPEED;
 		rightRotationSpeed = -ROTATION_SPEED;
 
@@ -348,8 +318,6 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 	}
 	if((amplL-amplR) < 0 && (amplF-amplB) > 0 && (amplF-amplR) > 0)
 	{
-		//chprintf((BaseSequentialStream *) &SDU1,"Droite 0-45, ratio = %1.4f \n",(amplL-amplR)/(amplL-amplF));
-
 		if((amplL-amplR)/(amplL-amplF)>RATIO_ROT)
 		{
 			leftRotationSpeed  =  -ROTATION_SPEED;
@@ -372,7 +340,6 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 	}
 	if((amplL-amplR) < 0 && (amplF-amplB) > 0 && (amplF-amplR) < 0)
 	{
-		//chprintf((BaseSequentialStream *) &SDU1,"Droite 45-90 \n");
 		leftRotationSpeed  =  -ROTATION_SPEED;
 		rightRotationSpeed = ROTATION_SPEED;
 
@@ -382,7 +349,6 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 	}
 	if((amplL-amplR) < 0 && (amplF-amplB) < 0 && (amplR-amplB) > 0)
 	{
-	//	chprintf((BaseSequentialStream *) &SDU1,"Droite 90-135 \n");
 		leftRotationSpeed  =  -ROTATION_SPEED;
 		rightRotationSpeed = ROTATION_SPEED;
 
@@ -392,7 +358,6 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 	}
 	if((amplL-amplR) < 0 && (amplF-amplB) < 0 && (amplR-amplB) < 0)
 	{
-		//chprintf((BaseSequentialStream *) &SDU1,"Droite 135-180 \n");
 		leftRotationSpeed  =  -ROTATION_SPEED;
 		rightRotationSpeed = ROTATION_SPEED;
 
@@ -402,7 +367,6 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 	}
 	if((amplL-amplR) > 0 && (amplF-amplB) < 0 && (amplB-amplL) > 0)
 	{
-		//chprintf((BaseSequentialStream *) &SDU1,"Gauche 90-135 \n");
 		leftRotationSpeed  = ROTATION_SPEED;
 		rightRotationSpeed =  -ROTATION_SPEED;
 
@@ -412,7 +376,6 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 	}
 	if((amplL-amplR) > 0 && (amplF-amplB) < 0 && (amplB-amplL) < 0)
 	{
-		//chprintf((BaseSequentialStream *) &SDU1,"Gauche 135-180 \n");
 		leftRotationSpeed  = ROTATION_SPEED;
 		rightRotationSpeed =  -ROTATION_SPEED;
 
@@ -424,23 +387,12 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 }
 
 
-/*
-*	Callback called when the demodulation of the four microphones is done.
-*	We get 160 samples per mic every 10ms (16kHz)
-*	
-*	params :
-*	int16_t *data			Buffer containing 4 times 160 samples. the samples are sorted by micro
-*							so we have [micRight1, micLeft1, micBack1, micFront1, micRight2, etc...]
-*	uint16_t num_samples	Tells how many data we get in total (should always be 640)
-*/
-
-
 void processMean()
 {
-	for (uint8_t i = 0; i<4;i++)
+	for (uint8_t i = 0; i<NB_FREQ;i++)
 	{
 
-		for(uint8_t j = 0; j<4;j++)
+		for(uint8_t j = 0; j<NB_MIC;j++)
 		{
 			meanAmpl[i][j] = 0;
 			
@@ -457,7 +409,7 @@ void processMean()
 
 void addNewAmpl()
 {
-	for (uint8_t i = 0; i<4;i++)
+	for (uint8_t i = 0; i<NB_FREQ;i++)
 	{
 		if(micRight_output[FREQ_ID_1024[i]] > 15000)
 		{
@@ -483,7 +435,7 @@ void updateMaxAmp()
 	tabMaxAmpl[1] = 0;
 	tabMaxAmpl[2] = 0;
 	tabMaxAmpl[3] = 0;
-	for (uint8_t i =0; i<4;i++)
+	for (uint8_t i =0; i<NB_FREQ;i++)
 		{
 			if(tabMaxAmpl[0] < meanAmpl[i][R_ID])
 			{
@@ -506,7 +458,6 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 	*/
 
 	static uint16_t nb_samples = 0;
-	static uint16_t mustSend = 0;
 
 	//loop to fill the buffers
 	for(uint16_t i = 0 ; i < num_samples ; i+=4){
@@ -555,17 +506,14 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		arm_cmplx_mag_f32(micFront_cmplx_input, micFront_output, FFT_SIZE);
 		arm_cmplx_mag_f32(micBack_cmplx_input, micBack_output, FFT_SIZE);
 
+		// modification de tabMaxAmpl avec les 
+
 		processMean();
 		addNewAmpl();
 		updateMaxAmp();
 
-		
-
 		algoPosAmpl(tabMaxAmpl[L_ID],tabMaxAmpl[F_ID],tabMaxAmpl[R_ID],tabMaxAmpl[B_ID]);
-		//float ALmR = maxAmplLeft-maxAmplRight;
-		//float AFmR = maxAmplFront-maxAmplRight;
 
-		//float ratio = (ALmR/AFmR);
 		detect_pick(FREQ_1_id, micRight_output[FREQ_ID_1024[FREQ_1_id]]);
 		detect_pick(FREQ_2_id, micRight_output[FREQ_ID_1024[FREQ_2_id]]);
 		detect_pick(FREQ_3_id, micRight_output[FREQ_ID_1024[FREQ_3_id]]);
@@ -574,33 +522,12 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		detectMusique();
 
 		nb_samples = 0;
-		mustSend++;
-		if(coutnerLastPick < 65000)
+		if(coutnerLastPick < MAX_COUNTER)
 		{
 			coutnerLastPick++;
 		}
 	}
 }
 
-void wait_send_to_computer(void){
-	chBSemWait(&sendToComputer_sem);
-}
 
-float* get_audio_buffer_ptr(BUFFER_NAME_t name){
-	if(name == LEFT_CMPLX_INPUT){
-		return micLeft_cmplx_input;
-	}
-	else if (name == RIGHT_CMPLX_INPUT){
-		return micRight_cmplx_input;
-	}
-	else if (name == LEFT_OUTPUT){
-		return micLeft_output;
-	}
-	else if (name == RIGHT_OUTPUT){
-		return micRight_output;
-	}
-	else{
-		return NULL;
-	}
-}
 

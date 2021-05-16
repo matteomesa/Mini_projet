@@ -2,8 +2,7 @@
 #define AUDIO_PROCESSING_H
 
 
-#define FFT_SIZE 1024
-#define NB_MEAN	5
+
 
 typedef enum {
 	//2 times FFT_SIZE because these arrays contain complex numbers (real + imaginary)
@@ -25,17 +24,18 @@ uint16_t getStraightCount();
 bool isStraight();
 bool getStraightSide();
 
+bool checkTime (uint16_t time, uint16_t timeRef);
+void detect_pick(uint8_t id, uint32_t ampl);
+void detectMusique();
+
+void algoPosAmpl(float amplL, float amplF,float amplR, float amplB);
+
+void processMean();
+void addNewAmpl();
+void updateMaxAmp();
 
 void processAudioData(int16_t *data, uint16_t num_samples);
 
-/*
-*	put the invoking thread into sleep until it can process the audio datas
-*/
-void wait_send_to_computer(void);
 
-/*
-*	Returns the pointer to the BUFFER_NAME_t buffer asked
-*/
-float* get_audio_buffer_ptr(BUFFER_NAME_t name);
 
 #endif /* AUDIO_PROCESSING_H */

@@ -11,14 +11,22 @@
 
 static float dist; 
 
-#define MAX_ERROR		400
-#define MIN_ERROR		140
-#define MAX_SPEED 		350
-#define TARGET 			100
+#define MAX_ERROR			400
+#define MIN_ERROR			140
+#define MAX_SPEED 			350
+#define TARGET 				100
+#define TARGET_MARGE		10
+
+#define REGULATOR_FACTOR	7
+
+#define STRAIGHT_CONF_TIME	5
 
 static uint16_t oldDistance;
 
-
+/*  -----------------------------------------------------
+*	regulator for the distance
+*   -----------------------------------------------------
+*/
 int16_t regulator(uint16_t distance)
 {
 	
@@ -32,36 +40,21 @@ int16_t regulator(uint16_t distance)
 	}
 	else
 	{
-		return (distance-TARGET+10)*7;
+		return (distance-TARGET+TARGET_MARGE)*REGULATOR_FACTOR;
 	}
 }
 
-
+/*  -----------------------------------------------------
+*	fonction to move in direction of the source
+*   -----------------------------------------------------
+*/
 void movement()
 {
-	
 
-	if(getMusique() && isStraight()&&(getStraightCount()> 5))
+	//when aligned with the source
+	if(getMusique() && isStraight()&&(getStraightCount()> STRAIGHT_CONF_TIME))
 	{
-	
-//		uint16_t distance = VL53L0X_get_dist_mm();
-//		if(oldDistance > distance)
-//		{
-//			if(getStraightSide())		//rotation a gauche
-//			{
-//				left_motor_set_speed(50);
-//				right_motor_set_speed(-50);
-//				oldDistance = distance;
-//				return;
-//			}
-//			else					//roation a droite
-//			{
-//				left_motor_set_speed(-50);
-//				right_motor_set_speed(50);
-//				oldDistance = distance;
-//				return;
-//			}
-//		}
+
 		
 		uint16_t speed = regulator(VL53L0X_get_dist_mm());
 		if(speed == 0)
@@ -74,9 +67,10 @@ void movement()
 		}
 		left_motor_set_speed(speed);
 		right_motor_set_speed(speed);
-		//chprintf((BaseSequentialStream *) &SDU1,"distance en mm: %d \n",VL53L0X_get_dist_mm());
 		return;
 	}
+
+	//when music is on, do the rotation
 	 if(getMusique())
 	{
 		set_frontLed(FALSE);
@@ -84,6 +78,8 @@ void movement()
 		left_motor_set_speed(getRightRotationSpeed());
 		return;
 	}
+
+	//when music is off, dont move
 	 else
 	 {
 	 	set_frontLed(FALSE);

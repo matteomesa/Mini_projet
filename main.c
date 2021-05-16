@@ -14,7 +14,6 @@
 
 #include <audio_processing.h>
 #include <fft.h>
-#include <communications.h>
 #include <arm_math.h>
 
 #define SLEEPTIME_MAIN 50
@@ -69,11 +68,7 @@ int main(void)
     VL53L0X_start();
     led_start();
 
-
-    //send_tab is used to save the state of the buffer to send (double buffering)
-    //to avoid modifications of the buffer while sending it
-    static float send_tab[FFT_SIZE];
-
+    //inits the 4 mic and use de function processAudioData when the buffers are full
     mic_start(&processAudioData);
 
     /* Infinite loop. */
@@ -81,7 +76,6 @@ int main(void)
     {
         movement();
         
-
     	chThdSleepMilliseconds(SLEEPTIME_MAIN);
     }
     

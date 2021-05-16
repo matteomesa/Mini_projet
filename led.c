@@ -5,18 +5,24 @@
 #include <chprintf.h>
 #include <usbcfg.h>
 #include <leds.h>
-//#include <led.h>
 #include "ch.h"
 #include "hal.h"
 
+#define TIME_SLEEP_LED		30
+#define COUNTER_LED_DOWN	10
+#define LED_WA_SIZE			128
 
 static bool ledPick;
 static bool frontLed;
 
 static uint8_t coutnerLedPick;
 
+/*  -----------------------------------------------------
+*	création thread Led
+*   -----------------------------------------------------
+*/
 
-static THD_WORKING_AREA(waLed, 128);
+static THD_WORKING_AREA(waLed, LED_WA_SIZE);
 static THD_FUNCTION(Led, arg) 
 {
 
@@ -30,11 +36,17 @@ static THD_FUNCTION(Led, arg)
 
 
 
-    	chThdSleepMilliseconds(30);
+    	chThdSleepMilliseconds(TIME_SLEEP_LED);
 
 
     }
 }
+
+
+/*  -----------------------------------------------------
+*	function tu update the state of the LED
+*   -----------------------------------------------------
+*/
 
 void update_ledPick()
 {
@@ -48,7 +60,7 @@ void update_ledPick()
 			set_all_led(FALSE);
 			coutnerLedPick++;
 		}
-		if(coutnerLedPick > 10)
+		if(coutnerLedPick > COUNTER_LED_DOWN)
 		{
 			ledPick = FALSE;
 		}
@@ -58,8 +70,6 @@ void update_ledPick()
 		set_all_led(FALSE);
 	}
 }
-
-
 
 void update_FrontLed()
 {
@@ -72,9 +82,11 @@ void update_FrontLed()
 }
 
 
-void led_start(void){
-	chThdCreateStatic(waLed, sizeof(waLed), NORMALPRIO, Led, NULL);
-}
+
+/*  -----------------------------------------------------
+*	fonction to change the LED state
+*   -----------------------------------------------------
+*/
 
 void set_ledPick()
 {
@@ -93,4 +105,14 @@ void set_all_led(bool state)
 	set_led(LED3,state);
 	set_led(LED5,state);
 	set_led(LED7,state);
+}
+
+
+/*  -----------------------------------------------------
+*	function to start the thread
+*   -----------------------------------------------------
+*/
+
+void led_start(void){
+	chThdCreateStatic(waLed, sizeof(waLed), NORMALPRIO, Led, NULL);
 }
