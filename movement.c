@@ -4,12 +4,14 @@
 #include <arm_math.h>
 #include <chprintf.h>
 #include <usbcfg.h>
+#include <movement.h>
+#include <led.h>
+#include <sensors/VL53L0X/VL53L0X.h>
 
 #include "ch.h"
 #include "hal.h"
 
 
-static float dist; 
 
 #define MAX_ERROR			400
 #define MIN_ERROR			140
@@ -21,7 +23,6 @@ static float dist;
 
 #define STRAIGHT_CONF_TIME	5
 
-static uint16_t oldDistance;
 
 /*  -----------------------------------------------------
 *	regulator for the distance
@@ -48,15 +49,15 @@ int16_t regulator(uint16_t distance)
 *	fonction to move in direction of the source
 *   -----------------------------------------------------
 */
-void movement()
+void movement(void)
 {
 
 	//when aligned with the source
 	if(getMusique() && isStraight()&&(getStraightCount()> STRAIGHT_CONF_TIME))
 	{
 
-		
-		uint16_t speed = regulator(VL53L0X_get_dist_mm());
+		uint16_t dist = VL53L0X_get_dist_mm();
+		uint16_t speed = regulator(dist);
 		if(speed == 0)
 		{
 			set_frontLed(TRUE);

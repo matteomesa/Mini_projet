@@ -47,9 +47,8 @@
 #define PIC_TIM_LIM		7000
 #define NB_OLD_PIC		2
 
-
-
 #define NOISE 			5000
+#define HIGH_NOISE		15000
 
 #define R_ID            0
 #define L_ID            1
@@ -57,12 +56,10 @@
 #define F_ID            3
 
 #define RANGE_TIME		6100
-
 #define LIM_TIME		200
+#define TIME_NO_MUSIC	25
 
 #define RATIO_ROT		0.4
-
-#define TIME_NO_MUSIC	25
 
 #define MAX_COUNTER		65000
 
@@ -132,32 +129,32 @@ static uint16_t straight_count;
 *   -----------------------------------------------------
 */
 
-bool getMusique()
+bool getMusique(void)
 {
 	return musique;
 }
 
-bool isStraight()
+bool isStraight(void)
 {
 	return straight;
 }
 
-bool getStraightSide()
+bool getStraightSide(void)
 {
 	return straightSide;
 }
 
-uint16_t getStraightCount()
+uint16_t getStraightCount(void)
 {
 	return straight_count;
 }
 
-int16_t getLeftRotationSpeed()
+int16_t getLeftRotationSpeed(void)
 {
 	return leftRotationSpeed;
 }
 
-int16_t getRightRotationSpeed()
+int16_t getRightRotationSpeed(void)
 {
 	return rightRotationSpeed;
 }
@@ -226,7 +223,7 @@ void detect_pick(uint8_t id, uint32_t ampl)
 }
 
 
-void detectMusique()
+void detectMusique(void)
 {
 
 	//création double tableau de temps
@@ -278,9 +275,6 @@ void detectMusique()
 	}
 	
 	musique = temp_musique;
-	set_body_led(musique);
-
-
 }
 
 void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
@@ -387,7 +381,7 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 }
 
 
-void processMean()
+void processMean(void)
 {
 	for (uint8_t i = 0; i<NB_FREQ;i++)
 	{
@@ -407,11 +401,11 @@ void processMean()
 	}
 }
 
-void addNewAmpl()
+void addNewAmpl(void)
 {
 	for (uint8_t i = 0; i<NB_FREQ;i++)
 	{
-		if(micRight_output[FREQ_ID_1024[i]] > 15000)
+		if(micRight_output[FREQ_ID_1024[i]] > HIGH_NOISE)
 		{
 
 			lastAmpl[i][R_ID][idAmpl[i]] = (uint32_t)micRight_output[FREQ_ID_1024[i]];
@@ -429,7 +423,7 @@ void addNewAmpl()
 }
 
 
-void updateMaxAmp()
+void updateMaxAmp(void)
 {
 	tabMaxAmpl[0] = 0;
 	tabMaxAmpl[1] = 0;

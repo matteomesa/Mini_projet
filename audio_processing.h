@@ -17,22 +17,22 @@ typedef enum {
 	BACK_OUTPUT
 } BUFFER_NAME_t;
 
-bool getMusique();
-int16_t getLeftRotationSpeed();
-int16_t getRightRotationSpeed();
-uint16_t getStraightCount();
-bool isStraight();
-bool getStraightSide();
+bool getMusique(void);
+int16_t getLeftRotationSpeed(void);
+int16_t getRightRotationSpeed(void);
+uint16_t getStraightCount(void);
+bool isStraight(void);
+bool getStraightSide(void);
 
 bool checkTime (uint16_t time, uint16_t timeRef);
 void detect_pick(uint8_t id, uint32_t ampl);
-void detectMusique();
+void detectMusique(void);
 
 void algoPosAmpl(float amplL, float amplF,float amplR, float amplB);
 
-void processMean();
-void addNewAmpl();
-void updateMaxAmp();
+void processMean(void);
+void addNewAmpl(void);
+void updateMaxAmp(void);
 
 void processAudioData(int16_t *data, uint16_t num_samples);
 

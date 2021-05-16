@@ -1,6 +1,7 @@
 #include <main.h>
 #include <motors.h>
 #include <audio_processing.h>
+#include <led.h>
 #include <arm_math.h>
 #include <chprintf.h>
 #include <usbcfg.h>
@@ -48,7 +49,7 @@ static THD_FUNCTION(Led, arg)
 *   -----------------------------------------------------
 */
 
-void update_ledPick()
+void update_ledPick(void)
 {
 
 	if(getMusique())
@@ -71,7 +72,7 @@ void update_ledPick()
 	}
 }
 
-void update_FrontLed()
+void update_FrontLed(void)
 {
 	if(!getMusique())
 	{
@@ -88,7 +89,7 @@ void update_FrontLed()
 *   -----------------------------------------------------
 */
 
-void set_ledPick()
+void set_ledPick(void)
 {
 	ledPick = TRUE;
 	coutnerLedPick =0;

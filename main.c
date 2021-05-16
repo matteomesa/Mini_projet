@@ -15,6 +15,8 @@
 #include <audio_processing.h>
 #include <fft.h>
 #include <arm_math.h>
+#include <movement.h>
+#include <led.h>
 
 #define SLEEPTIME_MAIN 50
 

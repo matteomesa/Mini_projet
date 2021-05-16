@@ -3,6 +3,6 @@
 
 
 int16_t regulator(uint16_t distance);
-void movement();
+void movement(void);
 
 #endif /* MOVEMENT_H */
