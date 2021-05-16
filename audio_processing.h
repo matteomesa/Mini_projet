@@ -22,7 +22,7 @@ int16_t getLeftRotationSpeed(void);
 int16_t getRightRotationSpeed(void);
 uint16_t getStraightCount(void);
 bool isStraight(void);
-bool getStraightSide(void);
+
 
 bool checkTime (uint16_t time, uint16_t timeRef);
 void detect_pick(uint8_t id, uint32_t ampl);
