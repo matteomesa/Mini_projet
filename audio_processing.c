@@ -17,8 +17,6 @@
 #define FFT_SIZE		1024
 #define NB_MEAN			5
 
-#define NB_MIC			4
-#define NB_FREQ			3
 
 #define NB_NOTE			4
 
@@ -27,6 +25,8 @@
 #define TIME3			14350
 #define TIME4			14350
 
+
+#define NB_FREQ			3
 
 #define FREQ_1			531 //first frequence to detect sound
 #define FREQ_2			671 //second frequence to detect sound
@@ -48,6 +48,9 @@
 
 #define NOISE 			5000
 #define HIGH_NOISE		15000
+
+
+#define NB_MIC			4
 
 #define R_ID            0
 #define L_ID            1
@@ -78,43 +81,38 @@ static float micRight_output[FFT_SIZE];
 static float micFront_output[FFT_SIZE];
 static float micBack_output[FFT_SIZE];
 
-static uint8_t tabFreq[NB_NOTE];
-static uint16_t tabTime[NB_NOTE];
+//tableau static
 
-static float tabPick[NB_OLD_PIC*NB_FREQ];
-
-//Static float 
-
-
-//Static int
-static uint16_t coutnerLastPick;
-
-
-//Static bool
-
-//tableau des dernière amplitudes (3 freq / 4 mic / 10 donnée)
-static uint32_t lastAmpl[NB_FREQ][NB_MIC][NB_MEAN];
-
-//moyenne des dernières mesures des mic
-static uint32_t meanAmpl[NB_FREQ][NB_MIC];
-
-static uint8_t idAmpl[NB_FREQ];
-
-static uint32_t tabMaxAmpl[NB_MIC];
 
 static const uint8_t FREQ_ID_1024[NB_FREQ]={FREQ_1_POS,FREQ_2_POS,FREQ_3_POS};
 
-
-
+//tableau pour stocker les temps entre nos picks
+static uint16_t tabTime[NB_NOTE]; 
+//tableau avec les temps de référence
 static const uint16_t tabTimeRef[NB_NOTE]={TIME1,TIME2,TIME3,TIME4};
+//tableau pour les dernières valeurs en amplitude max
+static float tabPick[NB_OLD_PIC*NB_FREQ];
 
+//tableau d'amplitude
+static uint32_t lastAmpl[NB_FREQ][NB_MIC][NB_MEAN];
+static uint32_t meanAmpl[NB_FREQ][NB_MIC];
+static uint32_t tabMaxAmpl[NB_MIC];
+
+static uint8_t idAmpl[NB_FREQ];
+
+
+//counter
+static uint16_t coutnerLastPick;
+static uint16_t straight_count;
+
+//vitesse de rotation
 static int16_t leftRotationSpeed;
 static int16_t rightRotationSpeed;
 
+//bool d'état
 static bool musique;
 static bool straight;
-static bool straightSide;
-static uint16_t straight_count;
+
 
 
 
@@ -136,10 +134,6 @@ bool isStraight(void)
 	return straight;
 }
 
-bool getStraightSide(void)
-{
-	return straightSide;
-}
 
 uint16_t getStraightCount(void)
 {
@@ -223,17 +217,14 @@ void detectMusique(void)
 	//création double tableau de temps
 
 	uint16_t tabTime2[2*NB_NOTE];
-	uint8_t tabFreq2[2*NB_NOTE];
 
 	for (uint8_t i=0;i<NB_NOTE;i++)
 	{
 		tabTime2[i] = tabTime[i];
-		tabFreq2[i] = tabFreq[i];
 	}
 	for (uint8_t i=0;i<NB_NOTE;i++)
 	{
 		tabTime2[NB_NOTE+i] = tabTime[i];
-		tabFreq2[NB_NOTE+i] = tabFreq[i];
 	}
 
 	bool temp_musique = false;
@@ -242,7 +233,7 @@ void detectMusique(void)
 
 	for(uint8_t i = 0; i<NB_NOTE;i++)
 	{
-		if( (tabFreq2[i]==tabFreqRef[0]) && (checkTime(tabTime2[i],tabTimeRef[0])) )
+		if(checkTime(tabTime2[i],tabTimeRef[0])) 
 		{
 			
 			bool error = true;
@@ -250,7 +241,7 @@ void detectMusique(void)
 			{
 				
 					
-				if( (tabFreq2[i+j]==tabFreqRef[j]) && (checkTime(tabTime2[i+j],tabTimeRef[j])) )
+				if(checkTime(tabTime2[i+j],tabTimeRef[j])) 
 				{
 					
 					if((j == NB_NOTE-1)&& error &&(coutnerLastPick < TIME_NO_MUSIC))
@@ -292,7 +283,6 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 			leftRotationSpeed  = 0;
 			rightRotationSpeed = 0;
 
-			straightSide = TRUE;
 			straight = true;
 			straight_count++;
 			return;
@@ -327,7 +317,6 @@ void algoPosAmpl(float amplL, float amplF,float amplR, float amplB)
 			leftRotationSpeed  = 0;
 			rightRotationSpeed = 0;
 
-			straightSide = FALSE;
 			straight = true;
 			straight_count++;
 			return;
