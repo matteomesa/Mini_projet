@@ -104,6 +104,7 @@ static uint8_t idAmpl[NB_FREQ];
 //counter
 static uint16_t coutnerLastPick;
 static uint16_t straight_count;
+static uint8_t index_tab;
 
 //vitesse de rotation
 static int16_t leftRotationSpeed;
